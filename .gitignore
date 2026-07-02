@@ -1,0 +1,38 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+.playwright/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local data and uploads
+local-data/
+private/
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.pdf
+*.docx
+*.pptx
+*.zip
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
