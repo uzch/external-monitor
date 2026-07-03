@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cap-hybrid-platform",
+    "name": "Hybrid cloud platform",
+    "description": "Common platform patterns for applications across datacenter, public cloud, and edge estates.",
+    "themes": ["platform", "hybrid-cloud", "operations"],
+    "sourceRef": { "fixture": "red-hat-capabilities.json", "recordId": "cap-hybrid-platform" },
+    "active": true
+  },
+  {
+    "id": "cap-automation",
+    "name": "Infrastructure automation",
+    "description": "Automation practices for repeatable infrastructure, security, and operations workflows.",
+    "themes": ["automation", "operations", "security"],
+    "sourceRef": { "fixture": "red-hat-capabilities.json", "recordId": "cap-automation" },
+    "active": true
+  },
+  {
+    "id": "cap-app-modernization",
+    "name": "Application modernization",
+    "description": "Patterns for modernizing application delivery and runtime operations.",
+    "themes": ["applications", "containers", "modernization"],
+    "sourceRef": { "fixture": "red-hat-capabilities.json", "recordId": "cap-app-modernization" },
+    "active": true
+  }
+]

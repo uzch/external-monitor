@@ -1,0 +1,64 @@
+[
+  {
+    "id": "geo-na",
+    "level": "GEO",
+    "label": "North America",
+    "path": ["North America"],
+    "sourceRef": { "fixture": "hierarchy-nodes.json", "recordId": "geo-na" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "region-east",
+    "parentId": "geo-na",
+    "level": "region",
+    "label": "East",
+    "path": ["North America", "East"],
+    "sourceRef": { "fixture": "hierarchy-nodes.json", "recordId": "region-east" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "region-west",
+    "parentId": "geo-na",
+    "level": "region",
+    "label": "West",
+    "path": ["North America", "West"],
+    "sourceRef": { "fixture": "hierarchy-nodes.json", "recordId": "region-west" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "pod-east-platform",
+    "parentId": "region-east",
+    "level": "pod",
+    "label": "East Platform Pod",
+    "path": ["North America", "East", "East Platform Pod"],
+    "sourceRef": { "fixture": "hierarchy-nodes.json", "recordId": "pod-east-platform" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "pod-east-public",
+    "parentId": "region-east",
+    "level": "pod",
+    "label": "East Public Sector Pod",
+    "path": ["North America", "East", "East Public Sector Pod"],
+    "sourceRef": { "fixture": "hierarchy-nodes.json", "recordId": "pod-east-public" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "pod-west-commercial",
+    "parentId": "region-west",
+    "level": "pod",
+    "label": "West Commercial Pod",
+    "path": ["North America", "West", "West Commercial Pod"],
+    "sourceRef": { "fixture": "hierarchy-nodes.json", "recordId": "pod-west-commercial" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "pod-west-industrial",
+    "parentId": "region-west",
+    "level": "pod",
+    "label": "West Industrial Pod",
+    "path": ["North America", "West", "West Industrial Pod"],
+    "sourceRef": { "fixture": "hierarchy-nodes.json", "recordId": "pod-west-industrial" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  }
+]

@@ -1,0 +1,119 @@
+[
+  {
+    "id": "assign-nova-bank",
+    "accountId": "acct-nova-bank",
+    "hierarchyNodeId": "pod-east-platform",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-nova-bank" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-cascade-health",
+    "accountId": "acct-cascade-health",
+    "hierarchyNodeId": "pod-east-platform",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "partial_validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-cascade-health" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-metro-transit",
+    "accountId": "acct-metro-transit",
+    "hierarchyNodeId": "pod-east-public",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "illustrative",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-metro-transit" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-pioneer-utilities-east",
+    "accountId": "acct-pioneer-utilities",
+    "hierarchyNodeId": "pod-east-public",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "partial_validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-pioneer-utilities-east" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-pioneer-utilities-west",
+    "accountId": "acct-pioneer-utilities",
+    "hierarchyNodeId": "pod-west-industrial",
+    "assignmentType": "secondary_mapping",
+    "mappingStatus": "illustrative",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-pioneer-utilities-west" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-summit-retail",
+    "accountId": "acct-summit-retail",
+    "hierarchyNodeId": "pod-west-commercial",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-summit-retail" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-horizon-manufacturing",
+    "accountId": "acct-horizon-manufacturing",
+    "hierarchyNodeId": "pod-west-industrial",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-horizon-manufacturing" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-lakeview-insurance",
+    "accountId": "acct-lakeview-insurance",
+    "hierarchyNodeId": "pod-east-platform",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "partial_validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-lakeview-insurance" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-redwood-logistics",
+    "accountId": "acct-redwood-logistics",
+    "hierarchyNodeId": "pod-west-commercial",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-redwood-logistics" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-silverline-media",
+    "accountId": "acct-silverline-media",
+    "hierarchyNodeId": "pod-west-commercial",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "illustrative",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-silverline-media" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-terra-foods",
+    "accountId": "acct-terra-foods",
+    "hierarchyNodeId": "pod-west-industrial",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "partial_validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-terra-foods" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-urban-college",
+    "accountId": "acct-urban-college",
+    "hierarchyNodeId": "pod-east-public",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-urban-college" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": "assign-valley-air",
+    "accountId": "acct-valley-air",
+    "hierarchyNodeId": "pod-west-industrial",
+    "assignmentType": "mapped_account",
+    "mappingStatus": "validated",
+    "sourceRef": { "fixture": "account-assignments.json", "recordId": "assign-valley-air" },
+    "effectiveStart": "2026-01-01T00:00:00Z"
+  }
+]
