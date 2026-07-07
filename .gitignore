@@ -4,6 +4,7 @@ dist/
 build/
 coverage/
 .playwright/
+test-results/
 
 # Local environment and secrets
 .env

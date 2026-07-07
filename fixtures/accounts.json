@@ -1,0 +1,98 @@
+[
+  {
+    "id": "acct-nova-bank",
+    "name": "Nova Bank",
+    "aliases": ["Nova Financial"],
+    "sector": "Financial services",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-nova-bank" }
+  },
+  {
+    "id": "acct-cascade-health",
+    "name": "Cascade Health",
+    "aliases": ["Cascade Health System"],
+    "sector": "Healthcare",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-cascade-health" }
+  },
+  {
+    "id": "acct-metro-transit",
+    "name": "Metro Transit Authority",
+    "aliases": ["MTA Example"],
+    "sector": "Public sector",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-metro-transit" }
+  },
+  {
+    "id": "acct-pioneer-utilities",
+    "name": "Pioneer Utilities",
+    "aliases": [],
+    "sector": "Energy",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-pioneer-utilities" }
+  },
+  {
+    "id": "acct-summit-retail",
+    "name": "Summit Retail Group",
+    "aliases": ["Summit Stores"],
+    "sector": "Retail",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-summit-retail" }
+  },
+  {
+    "id": "acct-horizon-manufacturing",
+    "name": "Horizon Manufacturing",
+    "aliases": ["Horizon Mfg"],
+    "sector": "Manufacturing",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-horizon-manufacturing" }
+  },
+  {
+    "id": "acct-lakeview-insurance",
+    "name": "Lakeview Insurance",
+    "aliases": [],
+    "sector": "Insurance",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-lakeview-insurance" }
+  },
+  {
+    "id": "acct-redwood-logistics",
+    "name": "Redwood Logistics",
+    "aliases": [],
+    "sector": "Transportation",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-redwood-logistics" }
+  },
+  {
+    "id": "acct-silverline-media",
+    "name": "Silverline Media",
+    "aliases": [],
+    "sector": "Media",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-silverline-media" }
+  },
+  {
+    "id": "acct-terra-foods",
+    "name": "Terra Foods",
+    "aliases": [],
+    "sector": "Consumer goods",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-terra-foods" }
+  },
+  {
+    "id": "acct-urban-college",
+    "name": "Urban College",
+    "aliases": [],
+    "sector": "Education",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-urban-college" }
+  },
+  {
+    "id": "acct-valley-air",
+    "name": "Valley Air",
+    "aliases": [],
+    "sector": "Aviation",
+    "geography": "North America",
+    "sourceRef": { "fixture": "accounts.json", "recordId": "acct-valley-air" }
+  }
+]
