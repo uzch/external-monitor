@@ -1,0 +1,35 @@
+name: UX or Navigation Gap
+description: Report a place where the repo, app, or docs are hard to understand.
+title: "[UX] "
+labels:
+  - ux
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when a first-time reader or user gets lost.
+  - type: textarea
+    id: where
+    attributes:
+      label: Where did you get stuck?
+      description: Link the page, file, screen, or workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to understand or do?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested improvement
+      description: Optional.

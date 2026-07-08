@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="360" viewBox="0 0 1100 360" role="img" aria-labelledby="title desc">
+  <title id="title">Signal lifecycle</title>
+  <desc id="desc">A lifecycle diagram showing candidate capture, evidence record, optional evaluation, ranking, and validation action.</desc>
+  <defs>
+    <style>
+      .bg{fill:#ffffff}
+      .lane{fill:#f7f3ea;stroke:#e1d8ca;stroke-width:2;rx:18}
+      .node{fill:#ffffff;stroke:#d8d4cc;stroke-width:2;rx:16}
+      .node-red{fill:#fff5f5;stroke:#bf2f2f;stroke-width:2;rx:16}
+      .node-green{fill:#f0f7f4;stroke:#7ca893;stroke-width:2;rx:16}
+      .head{font:700 20px Arial, sans-serif;fill:#1f252a}
+      .copy{font:400 14px Arial, sans-serif;fill:#4d575e}
+      .label{font:700 13px Arial, sans-serif;fill:#8f1d1b}
+      .arrow{stroke:#8f1d1b;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    </style>
+  </defs>
+  <rect class="bg" width="1100" height="360"/>
+  <rect class="lane" x="38" y="40" width="1024" height="280"/>
+  <text x="64" y="82" class="head">From public candidate to seller validation</text>
+  <g transform="translate(64 125)">
+    <rect class="node" width="170" height="120"/>
+    <text x="20" y="38" class="label">1. Capture</text>
+    <text x="20" y="70" class="copy">Registered source</text>
+    <text x="20" y="94" class="copy">returns feed entries.</text>
+  </g>
+  <path d="M250 185 H315" class="arrow"/>
+  <path d="M303 173 L317 185 L303 197" class="arrow"/>
+  <g transform="translate(330 125)">
+    <rect class="node" width="170" height="120"/>
+    <text x="20" y="38" class="label">2. Evidence</text>
+    <text x="20" y="70" class="copy">Store source URL,</text>
+    <text x="20" y="94" class="copy">dates, excerpt, fact.</text>
+  </g>
+  <path d="M516 185 H581" class="arrow"/>
+  <path d="M569 173 L583 185 L569 197" class="arrow"/>
+  <g transform="translate(596 125)">
+    <rect class="node-red" width="170" height="120"/>
+    <text x="20" y="38" class="label">3. Evaluate</text>
+    <text x="20" y="70" class="copy">Optional evaluator</text>
+    <text x="20" y="94" class="copy">may abstain or fail.</text>
+  </g>
+  <path d="M782 185 H847" class="arrow"/>
+  <path d="M835 173 L849 185 L835 197" class="arrow"/>
+  <g transform="translate(862 125)">
+    <rect class="node-green" width="170" height="120"/>
+    <text x="20" y="38" class="label">4. Validate</text>
+    <text x="20" y="70" class="copy">Rank account only</text>
+    <text x="20" y="94" class="copy">from evaluated records.</text>
+  </g>
+  <text x="64" y="286" class="copy">The output is not proof of intent. It is a bounded reason to inspect, discuss, or validate.</text>
+</svg>
