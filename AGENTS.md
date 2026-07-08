@@ -4,20 +4,19 @@ Build a local tool that helps users answer: where to look, what changed, why it 
 
 ## Rules
 
+- Never use em dash punctuation. Use plain hyphen instead.
+- When writing commit messages, NEVER auto-add your agent name as co-author.
+- Never manually modify CHANGELOG.md files or any files that are marked as auto-generated.
+- Use readable concise Markdown with plain hyphens and no em dash punctuation. Follow existing file style unless the task explicitly asks for restructuring.
+- When making technical decisions, do not give much weight to development cost. Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
+- When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user would experience it. This makes sure you find the real problem so your fix will actually solve it.
+- When end-to-end testing a product, be picky about the UI you see and be obsessed with pixel perfection. If something clearly looks off, even if it is not directly related to what you are doing, try to get it fixed along the way.
+- Apply that same high standard to engineering excellence: lint, test failures, and test flakiness. If you see one, even if it is not caused by what you are working on right now, still get it fixed.
 - Keep external fact, source evidence, Red Hat relevance hypothesis, and validation action separate.
 - Never present an external event as proof of customer intent, opportunity, fit, demand, renewal, deployment, ownership, or complete coverage.
 - Treat NAPS as configuration, not a hard-coded universal hierarchy.
-- Use local synthetic fixtures only unless an approved plan explicitly adds an integration.
-- Do not add private source material, credentials, customer data, live retrieval, APIs, RAG, MCP, Salesforce, Slack, email, or network calls without approval.
-- Keep milestones bounded, but do not choose an inferior solution solely to reduce implementation time.
-- Within scope, favor correctness, maintainability, extensibility, reliability, and polished UX.
 - Validate inputs at boundaries. Keep providers replaceable. Do not couple UI directly to fixture files.
-- Treat visible UI defects and broken end-to-end flows as product defects. Inspect rendered output and fix them before completion.
-- Fix clearly related defects encountered during work when they are safe, testable, and within the active subsystem. Surface unrelated scope changes.
-- Do not manually edit generated files or files marked auto-generated.
-- Use plain hyphens, never em dashes.
-- Keep prose paragraphs on one physical line. Do not reflow existing prose unless necessary.
-- Never add agent attribution, co-author lines, tags, or similar metadata to commits.
+- Surface unrelated scope changes if they cannot be safely, testably, and easily fixed within the active subsystem.
 - Do not restate settled requirements, list routine work, or provide speculative alternatives unless asked.
 - Ask only about material blockers. Otherwise make the best justified decision and proceed.
 - Before claiming completion, run the checks required by the active plan.
@@ -30,6 +29,7 @@ Build a local tool that helps users answer: where to look, what changed, why it 
 - Foundation v0: `docs/plans/FOUNDATION_V0.md`
 - Fixture edits: `fixtures/README.md`
 - Source interpretation: `docs/SOURCE_BOUNDARIES.md`
+- Repo landing, navigation, GitHub UX, and first-time comprehension: `.agents/skills/repo-experience-design/SKILL.md`
 
 ## Working style
 

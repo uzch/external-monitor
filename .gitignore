@@ -36,6 +36,7 @@ private/
 Thumbs.db
 .idea/
 .vscode/
+.codex/
 *.swp
 
 # Logs
