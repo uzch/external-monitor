@@ -45,6 +45,11 @@ p {
   line-height: 1.1;
 }
 
+.header-subtitle {
+  color: #505a61;
+  margin-top: 8px;
+}
+
 main {
   padding: 24px clamp(16px, 4vw, 48px) 48px;
 }
@@ -53,13 +58,20 @@ main {
 .detail-layout {
   display: grid;
   gap: 18px;
+  min-width: 0;
 }
 
 .panel {
   background: #ffffff;
   border: 1px solid #d8d4cc;
   border-radius: 8px;
+  min-width: 0;
   padding: 18px;
+}
+
+.page-grid > *,
+.detail-layout > * {
+  min-width: 0;
 }
 
 .controls-panel {
@@ -86,7 +98,9 @@ dt,
   letter-spacing: 0;
 }
 
-select {
+select,
+input,
+button {
   min-height: 42px;
   border: 1px solid #bdb6ab;
   border-radius: 6px;
@@ -94,6 +108,20 @@ select {
   background: #ffffff;
   padding: 0 12px;
   font: inherit;
+}
+
+button {
+  background: #8f1d1b;
+  border-color: #8f1d1b;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+button:disabled {
+  background: #bdb6ab;
+  border-color: #bdb6ab;
+  cursor: not-allowed;
 }
 
 .scope-meta {
@@ -195,29 +223,34 @@ td strong {
 }
 
 .badge.validated,
-.badge.prioritized {
+.badge.prioritized,
+.badge.evaluated {
   background: #dff2e7;
   color: #164b2d;
 }
 
 .badge.partial_validated,
-.badge.monitor {
+.badge.monitor,
+.badge.awaiting_evaluation {
   background: #fff0c7;
   color: #63480c;
 }
 
 .badge.illustrative,
-.badge.context {
+.badge.context,
+.badge.abstained {
   background: #e8e3f6;
   color: #3f326d;
 }
 
-.badge.duplicate {
+.badge.duplicate,
+.badge.degraded {
   background: #e6edf1;
   color: #30414c;
 }
 
-.badge.excluded {
+.badge.excluded,
+.badge.failed {
   background: #f4dddd;
   color: #712323;
 }
@@ -307,6 +340,58 @@ dd {
 
 .error-panel {
   border-color: #cf8f8f;
+}
+
+.setup-form,
+.run-list,
+.source-list {
+  display: grid;
+  gap: 10px;
+}
+
+.setup-form {
+  border-top: 1px solid #e4e0d8;
+  margin-top: 8px;
+  padding-top: 14px;
+}
+
+.setup-form label {
+  display: grid;
+  gap: 4px;
+}
+
+.form-error {
+  color: #712323;
+  font-weight: 700;
+}
+
+.run-item,
+.source-row {
+  align-items: center;
+  border: 1px solid #e4e0d8;
+  border-radius: 8px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.run-item span,
+.source-row span {
+  color: #62615d;
+  display: block;
+}
+
+.source-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.source-row,
+.signal-card,
+td,
+dd {
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 840px) {

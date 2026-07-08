@@ -29,6 +29,11 @@ Core product behavior depends on domain contracts and provider interfaces, never
 - Public evidence, internal context, generated interpretation, and seller action remain distinct records.
 - Unknown data remains unknown; no inferred ownership or missing-data fabrication.
 
+## Connected Monitor v1 implementation
+Connected Monitor v1 adds a local Node HTTP server, local SQLite repositories, runtime account and source registration APIs, a bounded RSS/Atom connector, source-safety checks, optional evaluator configuration, and ranking snapshots over evaluated evidence-backed records.
+Manual registration is an administrative bootstrap path for local operation and testing, not the intended long-term discovery experience.
+Future intelligent discovery, feedback learning, and agentic prioritization should be implemented through replaceable adapters and review workflows rather than coupling the UI directly to retrieval, model, or storage details.
+
 ## Preferred implementation posture
 Foundation v0 is a single-user local web application. Preferred stack: TypeScript, React, Vite, a lightweight router, schema validation, unit tests, and one browser-flow test. Codex may choose an alternative only when it materially improves simplicity or testability; record the reason in `docs/decisions/`.
 

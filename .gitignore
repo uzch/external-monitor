@@ -1,10 +1,12 @@
 # Dependencies and build output
 node_modules/
 dist/
+dist-server/
 build/
 coverage/
 .playwright/
 test-results/
+manual-test-evidence/
 
 # Local environment and secrets
 .env
@@ -15,6 +17,10 @@ test-results/
 
 # Local data and uploads
 local-data/
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
 private/
 *.xlsx
 *.xls

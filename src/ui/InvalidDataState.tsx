@@ -5,8 +5,8 @@ export function InvalidDataState({ error }: { error: unknown }) {
 
   return (
     <section className="panel error-panel" role="alert">
-      <p className="eyebrow">Invalid fixture data</p>
-      <h2>Foundation v0 cannot load this dataset</h2>
+      <p className="eyebrow">Application error</p>
+      <h2>Connected Monitor v1 cannot load this view</h2>
       <ul>
         {issues.map((issue) => (
           <li key={issue}>{issue}</li>

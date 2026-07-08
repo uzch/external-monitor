@@ -5,8 +5,11 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <div>
-          <p className="eyebrow">Foundation v0</p>
+          <p className="eyebrow">Connected Monitor v1</p>
           <h1>External Account Signal Monitor</h1>
+          <p className="header-subtitle">
+            Local monitoring of active registered public sources. This is not full external-world coverage.
+          </p>
         </div>
       </header>
       <main>
