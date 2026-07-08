@@ -1,0 +1,37 @@
+name: Source Boundary Concern
+description: Report a possible overclaim, unsafe source, or evidence-boundary problem.
+title: "[Boundary] "
+labels:
+  - source-boundary
+  - risk
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when a signal, source, evaluator output, or UI copy may blur fact, evidence, relevance, or action.
+  - type: textarea
+    id: external-fact
+    attributes:
+      label: External fact
+      description: What public fact or candidate record is involved?
+    validations:
+      required: true
+  - type: textarea
+    id: source-evidence
+    attributes:
+      label: Source evidence
+      description: Include publisher, URL, publication date, and retrieval context when available.
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: Concern
+      description: Explain the possible overclaim, unsafe source, or boundary issue.
+    validations:
+      required: true
+  - type: textarea
+    id: validation-action
+    attributes:
+      label: Validation action
+      description: What should a reviewer check next?

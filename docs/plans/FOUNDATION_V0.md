@@ -37,7 +37,7 @@ Use synthetic local fixtures only. No network calls, credentials, live sources, 
 - All contracts validate against synthetic fixtures.
 - UI uses application services rather than fixture files directly.
 - Ranking is deterministic, including ties.
-- “Mapped accounts only” appears for non-complete mappings.
+- "Mapped accounts only" appears for non-complete mappings.
 - Every visible signal preserves all required evidence and guardrail fields.
 - No view makes prohibited customer-intent or ownership claims.
 - Unit tests cover mapping, ranking, evidence validation, and guardrails.
