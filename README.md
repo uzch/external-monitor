@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="hero-image.png" alt="External Monitor hero image showing evidence moving from noisy public signals into filtering, prioritization, and drill-down review" width="100%">
+  <br>
+  <sub>Hero depicts the product direction. Connected Monitor v1 currently supports registered public sources, bounded evidence capture, optional evaluation, ranking, and drill-down review.</sub>
+</p>
+
 # External Account Signal Monitor
 
 [![CI](https://github.com/uzch/external-monitor/actions/workflows/check.yml/badge.svg)](https://github.com/uzch/external-monitor/actions/workflows/check.yml)
