@@ -1,87 +1,65 @@
-import { createServer, type Server } from "node:http";
-import { readFile, stat } from "node:fs/promises";
-import { extname, resolve, sep } from "node:path";
+import { spawn, type ChildProcess } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 export interface StaticServer {
   url: string;
   close: () => Promise<void>;
 }
-
-const contentTypes: Record<string, string> = {
-  ".css": "text/css; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".svg": "image/svg+xml",
-};
-
 export async function startStaticServer(port = 4173): Promise<StaticServer> {
-  const distRoot = resolve(process.cwd(), "dist");
-  const server = createServer(async (request, response) => {
-    try {
-      const filePath = await resolveRequestPath(distRoot, request.url ?? "/");
-      const body = await readFile(filePath);
-
-      response.writeHead(200, {
-        "Content-Type": contentTypes[extname(filePath)] ?? "application/octet-stream",
-      });
-      response.end(body);
-    } catch {
-      response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      response.end("Not found");
-    }
+  const databasePath = join(mkdtempSync(join(tmpdir(), "connected-monitor-e2e-")), "e2e.sqlite");
+  const child = spawn("node", ["dist-server/server/index.js"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      CM_PORT: String(port),
+      CM_DATABASE_PATH: databasePath,
+      CM_SOURCE_MIN_INTERVAL_MINUTES: "0",
+      CM_SOURCE_TIMEOUT_MS: "1000",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
   });
 
-  await listen(server, port);
+  await waitForHealth(port, child);
 
   return {
     url: `http://127.0.0.1:${port}`,
-    close: () => close(server),
+    close: () => close(child),
   };
 }
 
-async function resolveRequestPath(distRoot: string, requestUrl: string): Promise<string> {
-  const url = new URL(requestUrl, "http://127.0.0.1");
-  const relativePath = url.pathname === "/" ? "index.html" : decodeURIComponent(url.pathname.slice(1));
-  const candidate = resolve(distRoot, relativePath);
-  const rootPrefix = distRoot.endsWith(sep) ? distRoot : `${distRoot}${sep}`;
-
-  if (candidate !== distRoot && !candidate.startsWith(rootPrefix)) {
-    throw new Error("Request path escapes dist root");
-  }
-
-  try {
-    const stats = await stat(candidate);
-
-    if (stats.isFile()) {
-      return candidate;
-    }
-  } catch {
-    return resolve(distRoot, "index.html");
-  }
-
-  return resolve(distRoot, "index.html");
-}
-
-function listen(server: Server, port: number): Promise<void> {
-  return new Promise((resolveListen, rejectListen) => {
-    server.once("error", rejectListen);
-    server.listen(port, "127.0.0.1", () => {
-      server.off("error", rejectListen);
-      resolveListen();
-    });
+async function waitForHealth(port: number, child: ChildProcess): Promise<void> {
+  const deadline = Date.now() + 10000;
+  let lastError = "";
+  child.stderr?.on("data", (chunk) => {
+    lastError += String(chunk);
   });
-}
 
-function close(server: Server): Promise<void> {
-  return new Promise((resolveClose, rejectClose) => {
-    server.close((error) => {
-      if (error) {
-        rejectClose(error);
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) {
+      throw new Error(`Connected server exited during startup: ${lastError}`);
+    }
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}/api/health`);
+      if (response.ok) {
         return;
       }
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+  }
 
+  throw new Error(`Timed out waiting for Connected server: ${lastError}`);
+}
+
+function close(child: ChildProcess): Promise<void> {
+  return new Promise((resolveClose) => {
+    if (child.exitCode !== null) {
       resolveClose();
-    });
+      return;
+    }
+    child.once("exit", () => resolveClose());
+    child.kill("SIGINT");
   });
 }

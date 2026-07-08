@@ -1,37 +1,35 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DataValidationError } from "../../src/domain/validation";
 import { AccountDetailPage } from "../../src/ui/AccountDetailPage";
-import { getApplicationServices } from "../../src/services/applicationServices";
+import { connectedApi } from "../../src/services/connectedApi";
 
-vi.mock("../../src/services/applicationServices", () => ({
-  getApplicationServices: vi.fn(),
+vi.mock("../../src/services/connectedApi", () => ({
+  connectedApi: {
+    accountDetail: vi.fn(),
+  },
 }));
 
-const mockedGetApplicationServices = vi.mocked(getApplicationServices);
+const mockedApi = vi.mocked(connectedApi);
 
 describe("AccountDetailPage", () => {
   beforeEach(() => {
-    mockedGetApplicationServices.mockReset();
+    mockedApi.accountDetail.mockReset();
   });
 
-  it("shows invalid fixture data state when services fail on a direct account route", () => {
-    mockedGetApplicationServices.mockImplementation(() => {
-      throw new DataValidationError(["Evaluation eval-1 rationale contains prohibited overclaim"]);
-    });
+  it("shows API errors on a direct account route", async () => {
+    mockedApi.accountDetail.mockRejectedValue(new Error("Account not found"));
 
     render(
-      <MemoryRouter initialEntries={["/accounts/acct-nova-bank?scope=region-east"]}>
+      <MemoryRouter initialEntries={["/accounts/acct-missing"]}>
         <Routes>
           <Route path="/accounts/:accountId" element={<AccountDetailPage />} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Invalid fixture data");
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Evaluation eval-1 rationale contains prohibited overclaim",
-    );
+    await waitFor(() => expect(screen.getByRole("alert")).toBeVisible());
+    expect(screen.getByRole("alert")).toHaveTextContent("Connected Monitor v1 cannot load this view");
+    expect(screen.getByRole("alert")).toHaveTextContent("Account not found");
   });
 });

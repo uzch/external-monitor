@@ -28,6 +28,17 @@ Workflow: `hierarchy scope -> ranked accounts -> account detail -> evidence -> r
 - NAPS is the first configuration, not a global schema.
 - Future integrations must attach through adapters.
 
+## Connected Monitor v1 scope
+- Current v1 is a connected ingestion and evidence foundation for locally registered public RSS/Atom sources.
+- Manual account and source registration is a bootstrap/admin path, not the final seller workflow.
+- Retrieved candidates remain evidence records until an approved evaluator produces bounded relevance, uncertainty, and validation action fields.
+- When no evaluator is configured, candidates are stored as awaiting evaluation and no semantic priority or Red Hat relevance claim is produced.
+
+## Future product direction
+- Intelligent public-source discovery to reduce manual registration.
+- Feedback learning from review and validation outcomes.
+- Agentic prioritization that recommends where to look next while preserving evidence, uncertainty, and prohibited-claim boundaries.
+
 ## Foundation v0 scope
 - Local hierarchy, account, assignment, event, evaluation, and capability fixtures.
 - Portfolio filtering and deterministic ranking.
