@@ -38,6 +38,20 @@ It is designed so source retrieval, evaluation, ranking, storage, and UI deliver
 | Ranking | Account summaries rank only evaluated evidence-backed records. | Unevaluated candidates do not become intent signals. |
 | Review | Account detail separates fact, evidence, relevance, uncertainty, and action. | External events are never treated as proof of customer plans. |
 
+## Why V1 Matters
+
+Connected Monitor v1 is the evidence and ingestion foundation.
+It is valuable because it creates the durable boundary layer: source registration, bounded retrieval, local persistence, optional evaluation, account ranking, and reviewable evidence records.
+
+That foundation is what lets later discovery, feedback, and prioritization work stay evidence-bound instead of becoming another noisy or overclaiming feed.
+
+## What V1 Does Not Do Yet
+
+Connected Monitor v1 is not the final product vision.
+It does not yet perform intelligent public-source discovery, feedback learning, agentic prioritization, Salesforce delivery, Slack delivery, email delivery, automatic outreach, opportunity creation, forecasting, or intent detection.
+
+Those future capabilities should attach through replaceable adapters and review workflows without weakening the separation between external fact, source evidence, Red Hat relevance hypothesis, and validation action.
+
 ## Quick Start
 
 ```bash
@@ -119,6 +133,8 @@ An ignored seed file can create local runtime accounts and source registrations.
 | Connected UI and API client | [`src/ui/`](src/ui/) and [`src/services/connectedApi.ts`](src/services/connectedApi.ts) |
 | E2E behavior | [`tests/e2e/`](tests/e2e/) |
 | Synthetic foundation fixtures | [`fixtures/README.md`](fixtures/README.md) |
+| Known follow-ups and future direction | [`docs/PRODUCT.md`](docs/PRODUCT.md) |
+| Repo experience review loop | [`.agents/skills/repo-experience-design/SKILL.md`](.agents/skills/repo-experience-design/SKILL.md) |
 
 See [`REPOSITORY_CONTENTS.md`](REPOSITORY_CONTENTS.md) for a fuller tour.
 

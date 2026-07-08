@@ -15,6 +15,7 @@ It intentionally does not contain raw source workbooks, customer data, credentia
 | Understand data contracts | `docs/DATA_CONTRACTS.md` |
 | Understand source interpretation limits | `docs/SOURCE_BOUNDARIES.md` |
 | Understand synthetic fixture rules | `fixtures/README.md` |
+| Improve repo landing and navigation | `.agents/skills/repo-experience-design/SKILL.md` |
 
 ## Product Surface
 
@@ -56,6 +57,7 @@ It intentionally does not contain raw source workbooks, customer data, credentia
 | `.github/ISSUE_TEMPLATE/ux-gap.yml` | Report confusing app, repo, or docs navigation. |
 | `.github/ISSUE_TEMPLATE/source-boundary.yml` | Report overclaim or source-boundary concerns. |
 | `docs/assets/` | GitHub-rendered SVG diagrams used by the README. |
+| `.agents/skills/repo-experience-design/SKILL.md` | Repeatable repo-experience review loop. |
 
 ## Local Artifacts
 
