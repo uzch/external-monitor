@@ -17,12 +17,24 @@ import {
   UpdateSourceRegistrationRequest,
 } from "../src/domain/connectedContracts.js";
 import {
+  AccountSignalBriefDto,
+  AccountTeamFeedback,
+  accountTeamFeedbackTypes,
+  AccountTeamFeedbackType,
+  AccountTeamFeedbackRequest,
+  PriorityTier,
+  ResearchImportRequest,
+  ResearchRun,
+  ResearchSignal,
+} from "../src/domain/researchContracts.js";
+import {
   AccountRepository,
   CandidateRepository,
   ConnectedRepositories,
   EvaluationRepository,
   MonitorRunRepository,
   RankingRepository,
+  ResearchRepository,
   ReviewFeedbackRepository,
 } from "./repositories.js";
 
@@ -38,6 +50,7 @@ export class SqliteConnectedRepositories implements ConnectedRepositories {
   readonly evaluations: EvaluationRepository;
   readonly rankings: RankingRepository;
   readonly reviewFeedback: ReviewFeedbackRepository;
+  readonly research: ResearchRepository;
 
   private readonly db: DatabaseSync;
 
@@ -51,6 +64,7 @@ export class SqliteConnectedRepositories implements ConnectedRepositories {
     this.evaluations = new SqliteEvaluationRepository(this.db);
     this.rankings = new SqliteRankingRepository(this.db);
     this.reviewFeedback = new SqliteReviewFeedbackRepository(this.db);
+    this.research = new SqliteResearchRepository(this.db);
   }
 
   close() {
@@ -180,7 +194,61 @@ export class SqliteConnectedRepositories implements ConnectedRepositories {
         note TEXT NOT NULL,
         created_at TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS research_runs (
+        id TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL REFERENCES accounts(id),
+        state TEXT NOT NULL,
+        import_source TEXT NOT NULL,
+        executive_summary TEXT NOT NULL,
+        source_plan TEXT NOT NULL,
+        sources_checked_json TEXT NOT NULL,
+        source_gaps_json TEXT NOT NULL,
+        search_queries_used_json TEXT NOT NULL,
+        coverage_limitations_json TEXT NOT NULL,
+        unknowns_guardrails_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        imported_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS research_signals (
+        id TEXT PRIMARY KEY,
+        research_run_id TEXT NOT NULL REFERENCES research_runs(id),
+        account_id TEXT NOT NULL REFERENCES accounts(id),
+        external_fact TEXT NOT NULL,
+        source_url TEXT NOT NULL,
+        publisher TEXT NOT NULL,
+        publication_date TEXT,
+        retrieved_at TEXT NOT NULL,
+        excerpt TEXT NOT NULL,
+        account_match_basis TEXT NOT NULL,
+        source_category TEXT NOT NULL,
+        disposition TEXT NOT NULL,
+        disposition_rationale TEXT NOT NULL,
+        red_hat_relevance_hypothesis TEXT,
+        validation_question TEXT,
+        uncertainty_state TEXT NOT NULL,
+        sort_order INTEGER NOT NULL,
+        priority_tier TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS account_team_feedback (
+        id TEXT PRIMARY KEY,
+        research_signal_id TEXT NOT NULL REFERENCES research_signals(id),
+        feedback_type TEXT NOT NULL,
+        notes TEXT,
+        created_at TEXT NOT NULL
+      );
     `);
+    addColumnIfMissing(this.db, "research_runs", "source_plan", "TEXT NOT NULL DEFAULT ''");
+    addColumnIfMissing(this.db, "research_runs", "sources_checked_json", "TEXT NOT NULL DEFAULT '[]'");
+    addColumnIfMissing(this.db, "research_runs", "source_gaps_json", "TEXT NOT NULL DEFAULT '[]'");
+    addColumnIfMissing(this.db, "research_runs", "search_queries_used_json", "TEXT NOT NULL DEFAULT '[]'");
+    addColumnIfMissing(this.db, "research_runs", "coverage_limitations_json", "TEXT NOT NULL DEFAULT '[]'");
+    addColumnIfMissing(this.db, "research_signals", "sort_order", "INTEGER NOT NULL DEFAULT 0");
+    addColumnIfMissing(this.db, "research_signals", "priority_tier", "TEXT NOT NULL DEFAULT 'none'");
   }
 }
 
@@ -711,6 +779,191 @@ class SqliteReviewFeedbackRepository implements ReviewFeedbackRepository {
   }
 }
 
+class SqliteResearchRepository implements ResearchRepository {
+  constructor(private readonly db: DatabaseSync) {}
+
+  importResearchRun(input: ResearchImportRequest): { run: ResearchRun; signals: ResearchSignal[] } {
+    const now = isoNow();
+    const run: ResearchRun = {
+      id: randomUUID(),
+      accountId: input.accountId,
+      state: "imported",
+      importSource: input.importSource ?? "gpt_assisted",
+      executiveSummary: input.executiveSummary.trim(),
+      sourcePlan: input.sourcePlan.trim(),
+      sourcesChecked: input.sourcesChecked.map((item) => item.trim()),
+      sourceGaps: input.sourceGaps.map((item) => item.trim()),
+      searchQueriesUsed: input.searchQueriesUsed.map((item) => item.trim()),
+      coverageLimitations: input.coverageLimitations.map((item) => item.trim()),
+      unknownsAndGuardrails: input.unknownsAndGuardrails.map((item) => item.trim()),
+      createdAt: now,
+      updatedAt: now,
+      importedAt: now,
+    };
+
+    this.db.prepare(`
+      INSERT INTO research_runs (
+        id, account_id, state, import_source, executive_summary, unknowns_guardrails_json,
+        source_plan, sources_checked_json, source_gaps_json, search_queries_used_json,
+        coverage_limitations_json, created_at, updated_at, imported_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      run.id,
+      run.accountId,
+      run.state,
+      run.importSource,
+      run.executiveSummary,
+      JSON.stringify(run.unknownsAndGuardrails),
+      run.sourcePlan,
+      JSON.stringify(run.sourcesChecked),
+      JSON.stringify(run.sourceGaps),
+      JSON.stringify(run.searchQueriesUsed),
+      JSON.stringify(run.coverageLimitations),
+      run.createdAt,
+      run.updatedAt,
+      run.importedAt,
+    );
+
+    const statement = this.db.prepare(`
+      INSERT INTO research_signals (
+        id, research_run_id, account_id, external_fact, source_url, publisher,
+        publication_date, retrieved_at, excerpt, account_match_basis, source_category,
+        disposition, disposition_rationale, red_hat_relevance_hypothesis,
+        validation_question, uncertainty_state, sort_order, priority_tier, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const signals = input.signals.map((signal, index): ResearchSignal => ({
+      id: randomUUID(),
+      researchRunId: run.id,
+      accountId: run.accountId,
+      externalFact: signal.externalFact.trim(),
+      sourceUrl: signal.sourceUrl,
+      publisher: signal.publisher.trim(),
+      publicationDate: signal.publicationDate,
+      retrievedAt: signal.retrievedAt ?? now,
+      excerpt: signal.excerpt.trim(),
+      accountMatchBasis: signal.accountMatchBasis.trim(),
+      sourceCategory: signal.sourceCategory.trim(),
+      disposition: signal.disposition,
+      dispositionRationale: signal.dispositionRationale.trim(),
+      redHatRelevanceHypothesis: emptyToUndefined(signal.redHatRelevanceHypothesis),
+      validationQuestion: emptyToUndefined(signal.validationQuestion),
+      uncertaintyState: signal.uncertaintyState,
+      sortOrder: signal.sortOrder ?? index,
+      priorityTier: signal.priorityTier ?? "none",
+      createdAt: now,
+    }));
+
+    for (const signal of signals) {
+      statement.run(
+        signal.id,
+        signal.researchRunId,
+        signal.accountId,
+        signal.externalFact,
+        signal.sourceUrl,
+        signal.publisher,
+        signal.publicationDate ?? null,
+        signal.retrievedAt,
+        signal.excerpt,
+        signal.accountMatchBasis,
+        signal.sourceCategory,
+        signal.disposition,
+        signal.dispositionRationale,
+        signal.redHatRelevanceHypothesis ?? null,
+        signal.validationQuestion ?? null,
+        signal.uncertaintyState,
+        signal.sortOrder,
+        signal.priorityTier,
+        signal.createdAt,
+      );
+    }
+
+    return { run, signals };
+  }
+
+  getLatestBrief(accountId: string): AccountSignalBriefDto | undefined {
+    const accountRow = this.db.prepare("SELECT * FROM accounts WHERE id = ?").get(accountId) as Row | undefined;
+    if (!accountRow) {
+      return undefined;
+    }
+
+    const account = toAccount(accountRow);
+    const runRow = this.db.prepare(
+      "SELECT * FROM research_runs WHERE account_id = ? ORDER BY imported_at DESC LIMIT 1",
+    ).get(accountId) as Row | undefined;
+    const run = runRow ? toResearchRun(runRow) : undefined;
+    const signals = run
+      ? (this.db.prepare(
+        "SELECT * FROM research_signals WHERE research_run_id = ?",
+      ).all(run.id) as Row[]).map(toResearchSignal)
+        .sort(sortResearchSignals)
+      : [];
+    const feedback = run ? this.listFeedbackForRun(run.id) : [];
+
+    const topSignalsToValidate = signals.filter((signal) => signal.disposition === "keep");
+    const watchItems = signals.filter((signal) => signal.disposition === "watch");
+    const rejectedNoise = signals.filter((signal) => signal.disposition === "reject");
+    const abstainedSignals = signals.filter((signal) => signal.disposition === "abstain");
+
+    return {
+      account,
+      latestResearchRun: run,
+      executiveSummary: run?.executiveSummary ??
+        "No live research run has completed for this account yet.",
+      topSignalsToValidate,
+      watchItems,
+      rejectedNoise,
+      abstainedSignals,
+      evidenceTable: signals,
+      validationQuestions: [...topSignalsToValidate, ...watchItems]
+        .map((signal) => signal.validationQuestion)
+        .filter((question): question is string => Boolean(question)),
+      unknownsAndGuardrails: run?.unknownsAndGuardrails ?? [
+        "No live research has been reviewed for this account.",
+        "Do not infer customer intent, demand, fit, deployment, renewal, ownership, or coverage from raw external evidence.",
+      ],
+      feedbackSummary: summarizeFeedback(feedback),
+      feedback,
+    };
+  }
+
+  recordSignalFeedback(signalId: string, input: AccountTeamFeedbackRequest): AccountTeamFeedback | undefined {
+    const signal = this.db.prepare("SELECT id FROM research_signals WHERE id = ?").get(signalId) as Row | undefined;
+    if (!signal) {
+      return undefined;
+    }
+
+    const feedback: AccountTeamFeedback = {
+      id: randomUUID(),
+      researchSignalId: signalId,
+      feedbackType: input.feedbackType,
+      notes: emptyToUndefined(input.notes),
+      createdAt: isoNow(),
+    };
+    this.db.prepare(`
+      INSERT INTO account_team_feedback (id, research_signal_id, feedback_type, notes, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
+      feedback.id,
+      feedback.researchSignalId,
+      feedback.feedbackType,
+      feedback.notes ?? null,
+      feedback.createdAt,
+    );
+    return feedback;
+  }
+
+  listFeedbackForRun(runId: string): AccountTeamFeedback[] {
+    const rows = this.db.prepare(`
+      SELECT f.* FROM account_team_feedback f
+      JOIN research_signals s ON s.id = f.research_signal_id
+      WHERE s.research_run_id = ?
+      ORDER BY f.created_at DESC
+    `).all(runId) as Row[];
+    return rows.map(toAccountTeamFeedback);
+  }
+}
+
 function toAccount(row: Row): MonitoredAccount {
   return {
     id: text(row.id),
@@ -844,6 +1097,59 @@ function toRankingSnapshot(row: Row): RankingSnapshot {
   };
 }
 
+function toResearchRun(row: Row): ResearchRun {
+  return {
+    id: text(row.id),
+    accountId: text(row.account_id),
+    state: text(row.state) as ResearchRun["state"],
+    importSource: text(row.import_source) as ResearchRun["importSource"],
+    executiveSummary: text(row.executive_summary),
+    sourcePlan: text(row.source_plan),
+    sourcesChecked: parseJson<string[]>(row.sources_checked_json, []),
+    sourceGaps: parseJson<string[]>(row.source_gaps_json, []),
+    searchQueriesUsed: parseJson<string[]>(row.search_queries_used_json, []),
+    coverageLimitations: parseJson<string[]>(row.coverage_limitations_json, []),
+    unknownsAndGuardrails: parseJson<string[]>(row.unknowns_guardrails_json, []),
+    createdAt: text(row.created_at),
+    updatedAt: text(row.updated_at),
+    importedAt: text(row.imported_at),
+  };
+}
+
+function toResearchSignal(row: Row): ResearchSignal {
+  return {
+    id: text(row.id),
+    researchRunId: text(row.research_run_id),
+    accountId: text(row.account_id),
+    externalFact: text(row.external_fact),
+    sourceUrl: text(row.source_url),
+    publisher: text(row.publisher),
+    publicationDate: maybeText(row.publication_date),
+    retrievedAt: text(row.retrieved_at),
+    excerpt: text(row.excerpt),
+    accountMatchBasis: text(row.account_match_basis),
+    sourceCategory: text(row.source_category),
+    disposition: text(row.disposition) as ResearchSignal["disposition"],
+    dispositionRationale: text(row.disposition_rationale),
+    redHatRelevanceHypothesis: maybeText(row.red_hat_relevance_hypothesis),
+    validationQuestion: maybeText(row.validation_question),
+    uncertaintyState: text(row.uncertainty_state) as ResearchSignal["uncertaintyState"],
+    sortOrder: Number(row.sort_order),
+    priorityTier: text(row.priority_tier) as PriorityTier,
+    createdAt: text(row.created_at),
+  };
+}
+
+function toAccountTeamFeedback(row: Row): AccountTeamFeedback {
+  return {
+    id: text(row.id),
+    researchSignalId: text(row.research_signal_id),
+    feedbackType: text(row.feedback_type) as AccountTeamFeedback["feedbackType"],
+    notes: maybeText(row.notes),
+    createdAt: text(row.created_at),
+  };
+}
+
 function joinByState(
   candidates: CandidateEventRecord[],
   evaluations: Map<string, EvaluationRecord>,
@@ -866,6 +1172,39 @@ function sortSignalPairs(
     return rightScore - leftScore;
   }
   return Date.parse(right.candidate.publicationDate) - Date.parse(left.candidate.publicationDate);
+}
+
+function sortResearchSignals(left: ResearchSignal, right: ResearchSignal) {
+  if (left.sortOrder !== right.sortOrder) {
+    return left.sortOrder - right.sortOrder;
+  }
+
+  const priorityDifference = priorityRank(left.priorityTier) - priorityRank(right.priorityTier);
+  if (priorityDifference !== 0) {
+    return priorityDifference;
+  }
+
+  return Date.parse(right.createdAt) - Date.parse(left.createdAt);
+}
+
+function priorityRank(tier: PriorityTier): number {
+  return { high: 0, medium: 1, low: 2, none: 3 }[tier];
+}
+
+function summarizeFeedback(feedback: AccountTeamFeedback[]): Record<AccountTeamFeedbackType, number> {
+  const summary = Object.fromEntries(accountTeamFeedbackTypes.map((type) => [type, 0])) as
+    Record<AccountTeamFeedbackType, number>;
+  for (const item of feedback) {
+    summary[item.feedbackType] += 1;
+  }
+  return summary;
+}
+
+function addColumnIfMissing(db: DatabaseSync, table: string, column: string, definition: string) {
+  const rows = db.prepare(`PRAGMA table_info(${table})`).all() as Row[];
+  if (!rows.some((row) => text(row.name) === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
 }
 
 function normalizeAliases(aliases: string[], name: string): string[] {

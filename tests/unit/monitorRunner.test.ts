@@ -37,7 +37,7 @@ describe("monitor runner", () => {
     const run = await runner.run();
     const detail = repositories.rankings.getAccountDetail(account.id);
 
-    expect(run.state).toBe("completed_with_warnings");
+    expect(run.state).toBe("completed");
     expect(detail?.awaitingEvaluation).toHaveLength(1);
     expect(detail?.evaluatedSignals).toHaveLength(0);
     expect(repositories.rankings.latestAccountSummaries()[0].rankingScore).toBe(0);

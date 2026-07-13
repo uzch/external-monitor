@@ -6,6 +6,15 @@ export interface SafeUrlResult {
   diagnostics: string[];
 }
 
+export interface SafeFetchResponse {
+  body: Uint8Array;
+  contentType: string;
+  finalUrl: string;
+  diagnostics: string[];
+  headers: Headers;
+  status: number;
+}
+
 const maxRedirects = 3;
 
 export async function fetchSafeText(
@@ -13,6 +22,24 @@ export async function fetchSafeText(
   timeoutMs: number,
   maxBytes: number,
 ): Promise<{ body: string; finalUrl: string; diagnostics: string[]; status: number }> {
+  const result = await fetchSafeResponse(inputUrl, timeoutMs, maxBytes, {
+    Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.5",
+  });
+
+  return {
+    body: new TextDecoder().decode(result.body),
+    finalUrl: result.finalUrl,
+    diagnostics: result.diagnostics,
+    status: result.status,
+  };
+}
+
+export async function fetchSafeResponse(
+  inputUrl: string,
+  timeoutMs: number,
+  maxBytes: number,
+  acceptHeaders: Record<string, string> = {},
+): Promise<SafeFetchResponse> {
   const diagnostics: string[] = [];
   let current = await validatePublicHttpUrl(inputUrl);
 
@@ -25,7 +52,7 @@ export async function fetchSafeText(
         signal: controller.signal,
         headers: {
           "User-Agent": "external-account-signal-monitor/1.0 local",
-          Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.5",
+          ...acceptHeaders,
         },
       });
 
@@ -46,15 +73,22 @@ export async function fetchSafeText(
         throw new Error(`Source returned HTTP ${response.status}`);
       }
 
-      const body = await readLimitedText(response, maxBytes);
-      clearTimeout(timeout);
-      return { body, finalUrl: current.url.toString(), diagnostics, status: response.status };
+      const body = await readLimitedBytes(response, maxBytes);
+      return {
+        body,
+        contentType: response.headers.get("content-type") ?? "",
+        finalUrl: current.url.toString(),
+        diagnostics,
+        headers: response.headers,
+        status: response.status,
+      };
     } catch (error) {
-      clearTimeout(timeout);
       if (error instanceof Error && error.name === "AbortError") {
         throw new Error(`Source retrieval timed out after ${timeoutMs}ms`);
       }
       throw error;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -106,9 +140,9 @@ function isRedirect(status: number): boolean {
   return [301, 302, 303, 307, 308].includes(status);
 }
 
-async function readLimitedText(response: Response, maxBytes: number): Promise<string> {
+async function readLimitedBytes(response: Response, maxBytes: number): Promise<Uint8Array> {
   if (!response.body) {
-    return "";
+    return new Uint8Array();
   }
 
   const reader = response.body.getReader();
@@ -128,7 +162,7 @@ async function readLimitedText(response: Response, maxBytes: number): Promise<st
     chunks.push(value);
   }
 
-  return new TextDecoder().decode(concat(chunks, total));
+  return concat(chunks, total);
 }
 
 function concat(chunks: Uint8Array[], total: number): Uint8Array {

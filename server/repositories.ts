@@ -13,6 +13,14 @@ import {
   UpdateAccountRequest,
   UpdateSourceRegistrationRequest,
 } from "../src/domain/connectedContracts.js";
+import {
+  AccountSignalBriefDto,
+  AccountTeamFeedback,
+  AccountTeamFeedbackRequest,
+  ResearchImportRequest,
+  ResearchRun,
+  ResearchSignal,
+} from "../src/domain/researchContracts.js";
 
 export interface AccountRepository {
   createAccount(input: CreateAccountRequest): MonitoredAccountRecord;
@@ -61,6 +69,13 @@ export interface ReviewFeedbackRepository {
   recordFeedbackPlaceholder(candidateId: string, note: string): void;
 }
 
+export interface ResearchRepository {
+  importResearchRun(input: ResearchImportRequest): { run: ResearchRun; signals: ResearchSignal[] };
+  getLatestBrief(accountId: string): AccountSignalBriefDto | undefined;
+  recordSignalFeedback(signalId: string, input: AccountTeamFeedbackRequest): AccountTeamFeedback | undefined;
+  listFeedbackForRun(runId: string): AccountTeamFeedback[];
+}
+
 export interface ConnectedRepositories {
   accounts: AccountRepository;
   runs: MonitorRunRepository;
@@ -68,6 +83,7 @@ export interface ConnectedRepositories {
   evaluations: EvaluationRepository;
   rankings: RankingRepository;
   reviewFeedback: ReviewFeedbackRepository;
+  research: ResearchRepository;
 }
 
 export type MonitoredAccountRecord = MonitoredAccount;

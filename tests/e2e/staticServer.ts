@@ -15,6 +15,7 @@ export async function startStaticServer(port = 4173): Promise<StaticServer> {
       ...process.env,
       CM_PORT: String(port),
       CM_DATABASE_PATH: databasePath,
+      CM_DISABLE_DOTENV_LOAD: "1",
       CM_SOURCE_MIN_INTERVAL_MINUTES: "0",
       CM_SOURCE_TIMEOUT_MS: "1000",
     },

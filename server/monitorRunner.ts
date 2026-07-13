@@ -86,7 +86,7 @@ export class MonitorRunner {
         this.buildRankingSnapshots(run.id, accounts),
       );
 
-      const hasWarnings = run.warningCount > 0 || run.diagnostics.length > 0;
+      const hasWarnings = run.warningCount > 0;
       run = {
         ...run,
         state: run.errorCount > 0 || hasWarnings ? "completed_with_warnings" : "completed",

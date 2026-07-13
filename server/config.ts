@@ -51,9 +51,18 @@ export interface RuntimeConfig {
     model?: string;
     timeoutMs: number;
   };
+  maas: {
+    baseUrl?: string;
+    apiKey?: string;
+    model?: string;
+    timeoutMs: number;
+  };
 }
 
 export function loadRuntimeConfig(env = process.env): RuntimeConfig {
+  if (env === process.env) {
+    loadIgnoredLocalEnv();
+  }
   const databasePath = resolve(env.CM_DATABASE_PATH ?? "local-data/connected-monitor.sqlite");
   mkdirSync(dirname(databasePath), { recursive: true });
 
@@ -73,7 +82,26 @@ export function loadRuntimeConfig(env = process.env): RuntimeConfig {
       model: env.CM_EVALUATOR_MODEL,
       timeoutMs: numberEnv(env.CM_EVALUATOR_TIMEOUT_MS, 15000),
     },
+    maas: {
+      baseUrl: env.CM_MAAS_BASE_URL,
+      apiKey: env.CM_MAAS_API_KEY,
+      model: env.CM_MAAS_MODEL,
+      timeoutMs: numberEnv(env.CM_MAAS_TIMEOUT_MS, 30000),
+    },
   };
+}
+
+function loadIgnoredLocalEnv(): void {
+  if (process.env.CM_DISABLE_DOTENV_LOAD === "1") {
+    return;
+  }
+  try {
+    process.loadEnvFile(resolve(".env"));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
 }
 
 export function loadSeedAccounts(config: RuntimeConfig): SeedAccount[] {
@@ -94,6 +122,10 @@ export function loadSeedAccounts(config: RuntimeConfig): SeedAccount[] {
 
 export function evaluatorConfigured(config: RuntimeConfig): boolean {
   return Boolean(config.evaluator.baseUrl && config.evaluator.apiKey && config.evaluator.model);
+}
+
+export function maasConfigured(config: RuntimeConfig): boolean {
+  return Boolean(config.maas.baseUrl && config.maas.apiKey && config.maas.model);
 }
 
 function numberEnv(value: string | undefined, fallback: number): number {
