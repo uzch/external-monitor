@@ -7,7 +7,7 @@ test.beforeAll(async () => {
   appServer = await startStaticServer();
 });
 test.afterAll(async () => {
-  await appServer.close();
+  await appServer?.close();
 });
 
 test("runtime account and source setup drills into truthful account detail", async ({ page }) => {
@@ -29,6 +29,10 @@ test("runtime account and source setup drills into truthful account detail", asy
   await page.getByRole("link", { name: "Example Corp" }).click();
 
   await expect(page.getByRole("heading", { name: "Example Corp", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Account Signal Brief" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Research readiness" })).toBeVisible();
+  await expect(page.getByText("Live public-web search is not configured")).toBeVisible();
+  await page.getByText("Monitor substrate and debug records").click();
   await expect(page.getByRole("heading", { name: "Registered sources" })).toBeVisible();
   await expect(page.getByText("Example public feed")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Evaluated semantic signals" })).toBeVisible();
@@ -51,5 +55,6 @@ test("mobile setup flow keeps registration controls usable", async ({ page }) =>
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   await page.getByRole("link", { name: "Mobile Example Corp" }).click();
   await expect(page.getByRole("heading", { name: "Mobile Example Corp", exact: true })).toBeVisible();
+  await page.getByText("Monitor substrate and debug records").click();
   await expect(page.getByText("Mobile public feed")).toBeVisible();
 });

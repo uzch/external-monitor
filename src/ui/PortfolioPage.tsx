@@ -144,6 +144,7 @@ export function PortfolioPage() {
                 <strong>{run.state}</strong>
                 <span>{formatDateTime(run.updatedAt)}</span>
                 <span>{run.warningCount} warnings / {run.errorCount} errors</span>
+                {run.diagnostics.length > 0 ? <span>{run.diagnostics.length} degraded-mode notices</span> : null}
               </div>
             ))}
           </div>

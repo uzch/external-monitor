@@ -3,7 +3,7 @@ import {
   dispositions,
   FixtureDataset,
   mappingStatuses,
-} from "./contracts";
+} from "./contracts.js";
 
 const sourceRefSchema = z.object({
   fixture: z.string().min(1),

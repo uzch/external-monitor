@@ -13,5 +13,11 @@
     "sourceMap": false,
     "resolveJsonModule": true
   },
-  "include": ["server/**/*.ts", "src/domain/connectedContracts.ts"]
+  "include": [
+    "server/**/*.ts",
+    "src/domain/connectedContracts.ts",
+    "src/domain/contracts.ts",
+    "src/domain/researchContracts.ts",
+    "src/domain/validation.ts"
+  ]
 }

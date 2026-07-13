@@ -134,6 +134,7 @@ dt,
 
 select,
 input,
+textarea,
 button {
   min-height: 42px;
   border: 1px solid #bdb6ab;
@@ -142,6 +143,14 @@ button {
   background: #ffffff;
   padding: 0 12px;
   font: inherit;
+}
+
+textarea {
+  line-height: 1.45;
+  min-height: 220px;
+  padding: 12px;
+  resize: vertical;
+  width: 100%;
 }
 
 button {
@@ -258,33 +267,41 @@ td strong {
 
 .badge.validated,
 .badge.prioritized,
-.badge.evaluated {
+.badge.evaluated,
+.badge.keep,
+.badge.high {
   background: #dff2e7;
   color: #164b2d;
 }
 
 .badge.partial_validated,
 .badge.monitor,
-.badge.awaiting_evaluation {
+.badge.awaiting_evaluation,
+.badge.watch,
+.badge.medium {
   background: #fff0c7;
   color: #63480c;
 }
 
 .badge.illustrative,
 .badge.context,
-.badge.abstained {
+.badge.abstained,
+.badge.abstain,
+.badge.low {
   background: #e8e3f6;
   color: #3f326d;
 }
 
 .badge.duplicate,
-.badge.degraded {
+.badge.degraded,
+.badge.none {
   background: #e6edf1;
   color: #30414c;
 }
 
 .badge.excluded,
-.badge.failed {
+.badge.failed,
+.badge.reject {
   background: #f4dddd;
   color: #712323;
 }
@@ -303,6 +320,134 @@ td strong {
 
 .pulse-panel {
   border-left: 4px solid #8f1d1b;
+}
+
+.brief-panel {
+  border-top: 4px solid #8f1d1b;
+  display: grid;
+  gap: 18px;
+}
+
+.brief-actions {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.brief-summary,
+.brief-process,
+.feedback-summary,
+.brief-section,
+.brief-columns section {
+  border-top: 1px solid #ece8df;
+  padding-top: 14px;
+}
+
+.brief-summary h3,
+.brief-process h3,
+.feedback-summary h3,
+.brief-section h3,
+.brief-columns h3 {
+  margin: 0 0 8px;
+}
+
+.brief-process h4,
+.feedback-history h4 {
+  margin: 0 0 6px;
+}
+
+.brief-columns {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.brief-columns ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.research-import {
+  display: grid;
+  gap: 12px;
+}
+
+.research-readiness,
+.readiness-list {
+  display: grid;
+  gap: 14px;
+}
+
+.research-readiness > .ranking-note {
+  margin: 0;
+}
+
+.readiness-row {
+  align-items: start;
+  border-top: 1px solid #ece8df;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding-top: 14px;
+}
+
+.readiness-row p {
+  color: #62615d;
+  margin-top: 3px;
+}
+
+.research-signal-card .score-block strong {
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.feedback-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feedback-pills span {
+  background: #f0f7f4;
+  border: 1px solid #cfd8d4;
+  border-radius: 999px;
+  color: #263c35;
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 5px 10px;
+}
+
+.feedback-history {
+  border-top: 1px solid #ece8df;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.feedback-history ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feedback-history li {
+  background: #f6f7f8;
+  border: 1px solid #e4e0d8;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.feedback-history span {
+  color: #62615d;
+  display: block;
+}
+
+.validation-question {
+  border-left: 3px solid #d8c48a;
+  color: #4b3f19;
+  margin-top: 10px;
+  padding-left: 10px;
 }
 
 .pulse-grid,
@@ -377,6 +522,7 @@ dd {
 }
 
 .setup-form,
+.feedback-form,
 .run-list,
 .source-list {
   display: grid;
@@ -394,8 +540,25 @@ dd {
   gap: 4px;
 }
 
+.feedback-form {
+  border-top: 1px solid #ece8df;
+  grid-template-columns: minmax(180px, 240px) minmax(180px, 1fr) auto;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.feedback-form label {
+  display: grid;
+  gap: 4px;
+}
+
 .form-error {
   color: #712323;
+  font-weight: 700;
+}
+
+.form-success {
+  color: #164b2d;
   font-weight: 700;
 }
 
@@ -428,6 +591,22 @@ dd {
   overflow-wrap: anywhere;
 }
 
+.debug-section summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.debug-content {
+  display: grid;
+  gap: 18px;
+  padding-top: 16px;
+}
+
+.debug-content > .panel {
+  border: 1px solid #e4e0d8;
+  box-shadow: none;
+}
+
 @media (max-width: 840px) {
   .page-grid {
     grid-template-columns: 1fr;
@@ -439,8 +618,14 @@ dd {
     display: grid;
   }
 
+  .brief-actions {
+    justify-items: start;
+  }
+
   .pulse-grid,
-  .signal-grid {
+  .signal-grid,
+  .brief-columns,
+  .feedback-form {
     grid-template-columns: 1fr;
   }
 

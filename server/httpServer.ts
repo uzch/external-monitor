@@ -9,11 +9,17 @@ import {
   UpdateAccountRequest,
   UpdateSourceRegistrationRequest,
 } from "../src/domain/connectedContracts.js";
-import { RuntimeConfig, evaluatorConfigured, loadSeedAccounts } from "./config.js";
+import {
+  AccountTeamFeedbackRequest,
+  accountTeamFeedbackSchema,
+  ResearchCapabilityStatus,
+} from "../src/domain/researchContracts.js";
+import { RuntimeConfig, evaluatorConfigured, loadSeedAccounts, maasConfigured } from "./config.js";
 import { createSemanticEvaluator } from "./evaluator.js";
 import { MonitorRunner } from "./monitorRunner.js";
 import { ConnectedRepositories } from "./repositories.js";
 import { RssAtomConnector } from "./rssAtomConnector.js";
+import { UnconfiguredLiveSearchProvider } from "./liveSearch.js";
 
 const accountSchema = z.object({
   name: z.string().min(1),
@@ -62,6 +68,7 @@ export function createConnectedServer(config: RuntimeConfig, repositories: Conne
 
   const evaluator = createSemanticEvaluator(config);
   const runner = new MonitorRunner(repositories, new RssAtomConnector(), evaluator);
+  const liveSearch = new UnconfiguredLiveSearchProvider();
   const distRoot = resolve(process.cwd(), "dist");
 
   return createServer(async (request, response) => {
@@ -69,7 +76,7 @@ export function createConnectedServer(config: RuntimeConfig, repositories: Conne
       const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "127.0.0.1"}`);
 
       if (url.pathname.startsWith("/api/")) {
-        await handleApi(request, response, url, config, repositories, runner);
+        await handleApi(request, response, url, config, repositories, runner, liveSearch);
         return;
       }
 
@@ -89,6 +96,7 @@ async function handleApi(
   config: RuntimeConfig,
   repositories: ConnectedRepositories,
   runner: MonitorRunner,
+  liveSearch: UnconfiguredLiveSearchProvider,
 ) {
   const method = request.method ?? "GET";
 
@@ -103,6 +111,31 @@ async function handleApi(
         : ["Semantic evaluator is not configured. Retrieved candidates remain awaiting evaluation."],
     };
     sendJson(response, 200, health);
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/research-capabilities") {
+    const capabilities: ResearchCapabilityStatus = {
+      reasoning: {
+        available: maasConfigured(config),
+        provider: "maas",
+        message: maasConfigured(config)
+          ? "MaaS reasoning is configured and ready for the executable capability probe."
+          : "MaaS reasoning needs CM_MAAS_BASE_URL, CM_MAAS_API_KEY, and CM_MAAS_MODEL.",
+      },
+      retrieval: {
+        available: true,
+        provider: "application_controlled",
+        message: "Safe application-controlled retrieval is ready for public HTML and PDF probes.",
+      },
+      liveSearch: {
+        available: liveSearch.isConfigured(),
+        message: liveSearch.isConfigured()
+          ? "Live public-web search is configured."
+          : liveSearch.unavailableMessage(),
+      },
+    };
+    sendJson(response, 200, capabilities);
     return;
   }
 
@@ -125,6 +158,17 @@ async function handleApi(
       return;
     }
     sendJson(response, 200, detail);
+    return;
+  }
+
+  const accountBriefMatch = /^\/api\/accounts\/([^/]+)\/signal-brief$/.exec(url.pathname);
+  if (accountBriefMatch && method === "GET") {
+    const brief = repositories.research.getLatestBrief(accountBriefMatch[1]);
+    if (!brief) {
+      sendJson(response, 404, { error: "Account not found" });
+      return;
+    }
+    sendJson(response, 200, brief);
     return;
   }
 
@@ -188,6 +232,14 @@ async function handleApi(
     const body = (await readJsonOptional(request)) as { accountId?: string };
     const run = await runner.run(body?.accountId);
     sendJson(response, 201, run);
+    return;
+  }
+
+  const signalFeedbackMatch = /^\/api\/research-signals\/([^/]+)\/feedback$/.exec(url.pathname);
+  if (signalFeedbackMatch && method === "POST") {
+    const body = accountTeamFeedbackSchema.parse(await readJson(request)) as AccountTeamFeedbackRequest;
+    const feedback = repositories.research.recordSignalFeedback(signalFeedbackMatch[1], body);
+    sendJson(response, feedback ? 201 : 404, feedback ?? { error: "Research signal not found" });
     return;
   }
 

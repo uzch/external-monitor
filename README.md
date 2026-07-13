@@ -18,7 +18,8 @@ External Account Signal Monitor is a local-first tool for account teams who need
 3. Why might it matter through a Red Hat lens?
 4. What should I validate next?
 
-It monitors active registered public RSS/Atom sources, stores bounded evidence locally, and keeps retrieved facts separate from Red Hat relevance hypotheses and validation actions.
+It stores bounded public-source evidence locally and is being evolved into an autonomous research workflow that produces account-team signal briefs.
+RSS/Atom monitoring and legacy imports remain ingestion substrate, not the seller workflow.
 It does not claim full external-world coverage, customer intent, opportunity, fit, demand, renewal, deployment, ownership, or complete account coverage.
 
 <p align="center">
@@ -38,11 +39,15 @@ It is designed so source retrieval, evaluation, ranking, storage, and UI deliver
 | Capability | Current behavior | Guardrail |
 |---|---|---|
 | Account setup | Add local monitored accounts and aliases. | Mapping confidence stays explicit. |
-| Source setup | Register public RSS/Atom sources per account. | URLs are validated and private network targets are rejected. |
-| Retrieval | Run bounded local monitor jobs. | Candidates remain evidence records until evaluated. |
+| MaaS probe | Validate a configured Red Hat Demo Platform model for structured planning, extraction, evaluation, and verification. | The probe is executable and does not claim live research is ready. |
+| Retrieval probe | Safely retrieve and normalize public HTML and PDFs. | Public URLs are validated and private network targets are rejected. |
+| Live research | Pending an approved public-web search capability with citations. | No JSON, RSS-only, or externally prepared substitute is presented as autonomous research. |
+| Signal brief | Render top signals, watch items, rejected noise, evidence, validation questions, and feedback. | Rejected noise is visible but not promoted as a validation target. |
+| Source setup | Register public RSS/Atom sources per account as an ingestion substrate. | URLs are validated and private network targets are rejected. |
+| Retrieval | Run bounded local monitor jobs when registered feeds are useful. | Candidates remain evidence records until evaluated. |
 | Evaluation | Optional configured HTTP evaluator can produce semantic records. | No evaluator means no Red Hat relevance or priority claim. |
 | Ranking | Account summaries rank only evaluated evidence-backed records. | Unevaluated candidates do not become intent signals. |
-| Review | Account detail separates fact, evidence, relevance, uncertainty, and action. | External events are never treated as proof of customer plans. |
+| Review | Account detail leads with the Account Signal Brief and keeps monitor records under debug/admin context. | External events are never treated as proof of customer plans. |
 
 ## Why V1 Matters
 
@@ -57,6 +62,16 @@ Connected Monitor v1 is not the final product vision.
 It does not yet perform intelligent public-source discovery, feedback learning, agentic prioritization, Salesforce delivery, Slack delivery, email delivery, automatic outreach, opportunity creation, forecasting, or intent detection.
 
 Those future capabilities should attach through replaceable adapters and review workflows without weakening the separation between external fact, source evidence, Red Hat relevance hypothesis, and validation action.
+
+## Current Iteration Status
+
+- Real Red Hat MaaS connectivity is working through the configured local endpoint and API key.
+- Four authorized MaaS models have measured benchmark results in [docs/MAAS_MODELS.md](docs/MAAS_MODELS.md).
+- Safe public HTML and PDF retrieval is implemented and probeable locally.
+- Structured-output compatibility is partial and model-specific. It is not yet reliable enough for autonomous research promotion.
+- Live public-web search with citations remains unresolved, so this is not yet an intelligent autonomous research product.
+- Frontend work is frozen except for wiring truthful backend states and outputs into the existing seller-facing views.
+- The next phase is an account-agnostic, backend-first autonomous intelligence runtime, likely using FastAPI once the live-search path is confirmed.
 
 ## Quick Start
 
@@ -75,10 +90,11 @@ Local runtime data is stored in `local-data/connected-monitor.sqlite` by default
 
 1. Add an account.
 2. Add one or more aliases that appear in public source text.
-3. Register a public RSS/Atom source for that account.
-4. Run the monitor.
-5. Open the account detail page.
-6. Inspect which records are awaiting evaluation, evaluated, abstained, degraded, or failed.
+3. Open the account detail page.
+4. Review research readiness on the account page.
+5. Configure and run the MaaS probe with `npm run probe:maas`.
+6. Run a public retrieval probe with `npm run probe:retrieval -- <public-url> ...`.
+7. Enable live autonomous research only after an approved public-web search capability is configured.
 
 If no evaluator is configured, candidates stay in the awaiting evaluation section.
 That is expected and intentional.
@@ -93,6 +109,8 @@ That is expected and intentional.
 
 Copy `.env.example` when you want local overrides.
 
+See [MaaS model evaluation](docs/MAAS_MODELS.md) for non-secret model configuration, methodology, and measured benchmark results.
+
 ```text
 CM_PORT=8787
 CM_DATABASE_PATH=local-data/connected-monitor.sqlite
@@ -105,6 +123,10 @@ CM_EVALUATOR_BASE_URL=
 CM_EVALUATOR_API_KEY=
 CM_EVALUATOR_MODEL=
 CM_EVALUATOR_TIMEOUT_MS=15000
+CM_MAAS_BASE_URL=
+CM_MAAS_API_KEY=
+CM_MAAS_MODEL=
+CM_MAAS_TIMEOUT_MS=30000
 ```
 
 An ignored seed file can create local runtime accounts and source registrations.
@@ -141,8 +163,6 @@ An ignored seed file can create local runtime accounts and source registrations.
 | Synthetic foundation fixtures | [`fixtures/README.md`](fixtures/README.md) |
 | Known follow-ups and future direction | [`docs/PRODUCT.md`](docs/PRODUCT.md) |
 | Repo experience review loop | [`.agents/skills/repo-experience-design/SKILL.md`](.agents/skills/repo-experience-design/SKILL.md) |
-
-See [`REPOSITORY_CONTENTS.md`](REPOSITORY_CONTENTS.md) for a fuller tour.
 
 ## Checks
 

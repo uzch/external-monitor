@@ -10,6 +10,14 @@ import {
   UpdateAccountRequest,
   UpdateSourceRegistrationRequest,
 } from "../domain/connectedContracts";
+import {
+  AccountSignalBriefDto,
+  AccountTeamFeedback,
+  AccountTeamFeedbackRequest,
+  ResearchCapabilityStatus,
+  ResearchRun,
+  ResearchSignal,
+} from "../domain/researchContracts";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -30,8 +38,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const connectedApi = {
   health: () => request<HealthDto>("/api/health"),
+  researchCapabilities: () => request<ResearchCapabilityStatus>("/api/research-capabilities"),
   portfolio: () => request<PortfolioDto>("/api/portfolio"),
   accountDetail: (accountId: string) => request<AccountDetailDto>(`/api/accounts/${accountId}`),
+  accountSignalBrief: (accountId: string) => request<AccountSignalBriefDto>(`/api/accounts/${accountId}/signal-brief`),
   accounts: () => request<MonitoredAccount[]>("/api/accounts"),
   createAccount: (input: CreateAccountRequest) =>
     request<MonitoredAccount>("/api/accounts", { method: "POST", body: JSON.stringify(input) }),
@@ -57,4 +67,9 @@ export const connectedApi = {
       body: JSON.stringify(accountId ? { accountId } : {}),
     }),
   monitorRuns: () => request<MonitorRun[]>("/api/monitor-runs"),
+  recordSignalFeedback: (signalId: string, input: AccountTeamFeedbackRequest) =>
+    request<AccountTeamFeedback>(`/api/research-signals/${signalId}/feedback`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
 };
