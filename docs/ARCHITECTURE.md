@@ -40,7 +40,7 @@ Implemented in this validated checkpoint:
 
 - Real Red Hat Demo Platform MaaS connectivity through a configured OpenAI-compatible Chat Completions endpoint.
 - Reusable MaaS probes for planning, extraction, evaluation, and verification.
-- Measured four-model benchmark coverage recorded in [docs/MAAS_MODELS.md](docs/MAAS_MODELS.md).
+- Measured four-model benchmark coverage recorded in [MAAS_MODELS.md](MAAS_MODELS.md).
 - Safe application-controlled public HTML and PDF retrieval with local probes.
 - Truthful UI and API capability states that expose the missing live-search dependency instead of pretending autonomous research exists.
 
@@ -65,21 +65,22 @@ Frontend status:
 
 ## Next Session Starting Point
 
-Read this file first, then [docs/MAAS_MODELS.md](docs/MAAS_MODELS.md).
+Read this file first, then [MAAS_MODELS.md](MAAS_MODELS.md).
 
 Run:
 
 ```bash
 npm run check
-npm run probe:maas -- gpt-oss-120b
-npm run probe:retrieval -- <public-html-url> <public-pdf-url>
 ```
 
-Then continue from the missing live-search dependency and the backend-first autonomous runtime:
+Rerun the MaaS or retrieval probes only when provider configuration, model integration, or the relevant retrieval and reasoning code changes.
 
-1. Confirm or integrate one approved live-search capability with citations.
-2. Reuse the existing MaaS and retrieval probes as the first provider implementations.
-3. Start the account-agnostic autonomous runtime behind backend APIs first, likely in FastAPI, without expanding the frontend beyond truthful state/output wiring.
+Then continue the backend-first, living-intelligence phase:
+
+1. Reuse the existing MaaS and retrieval probes as the first provider implementations.
+2. Start the account-agnostic autonomous runtime behind backend APIs first, with FastAPI as the intended next runtime direction rather than a permanent architectural limit.
+3. Preserve the frontend freeze except for wiring real backend states and outputs.
+4. Treat live public-web search with citations as a required capability for full autonomy and pursue it in parallel rather than using it as a reason to postpone backend intelligence work.
 
 ## Preferred implementation posture
 Foundation v0 is a single-user local web application. Preferred stack: TypeScript, React, Vite, a lightweight router, schema validation, unit tests, and one browser-flow test. Codex may choose an alternative only when it materially improves simplicity or testability; record the reason in `docs/decisions/`.
