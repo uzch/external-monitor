@@ -40,6 +40,13 @@ def upgrade() -> None:
     )
     op.create_index("ix_feedback_revisions_signal", "intelligence_feedback_revisions", ["signal_id"])
     op.create_index("ix_feedback_revisions_current", "intelligence_feedback_revisions", ["is_current"])
+    op.create_index(
+        "uq_feedback_revision_current_signal",
+        "intelligence_feedback_revisions",
+        ["signal_id"],
+        unique=True,
+        postgresql_where=sa.text("is_current = true"),
+    )
 
 
 def downgrade() -> None:

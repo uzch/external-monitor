@@ -4,7 +4,19 @@ from datetime import datetime
 from uuid import uuid4
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import JSON
@@ -296,6 +308,12 @@ class FeedbackRevision(Timestamped, Base):
     __tablename__ = "intelligence_feedback_revisions"
     __table_args__ = (
         UniqueConstraint("signal_id", "revision", name="uq_feedback_revision_signal_revision"),
+        Index(
+            "uq_feedback_revision_current_signal",
+            "signal_id",
+            unique=True,
+            postgresql_where=text("is_current = true"),
+        ),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))

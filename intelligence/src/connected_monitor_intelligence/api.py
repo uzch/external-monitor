@@ -401,7 +401,8 @@ def _feedback_view(store: IntelligenceStore, signal_id: str) -> FeedbackCurrentV
         )
         for item in revisions
     ]
-    current = next((item for item in reversed(history) if item.revision == max(row.revision for row in history)), None) if history else None
+    current_record = store.current_feedback_revision(signal_id)
+    current = next((item for item in history if current_record and item.id == current_record.id), None)
     if current:
         return FeedbackCurrentView(state="current", current=current, history=history)
     legacy_tags = [item.event_type for item in store.list_feedback(signal_id) if item.source == "explicit"]

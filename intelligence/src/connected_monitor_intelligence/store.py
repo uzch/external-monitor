@@ -603,6 +603,14 @@ class IntelligenceStore:
                 .order_by(FeedbackRevision.revision)
             ).all()
 
+    def current_feedback_revision(self, signal_id: str) -> FeedbackRevision | None:
+        with self._session() as session:
+            return session.scalar(
+                select(FeedbackRevision)
+                .where(FeedbackRevision.signal_id == signal_id, FeedbackRevision.is_current.is_(True))
+                .order_by(FeedbackRevision.revision.desc())
+            )
+
     def replace_feedback(
         self,
         run_id: str,
