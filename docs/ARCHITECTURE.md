@@ -63,6 +63,16 @@ Frontend status:
 - Seller-facing UI work is frozen except for wiring real backend states and outputs.
 - Do not start a broader UI redesign, portfolio shell rebuild, or seller-experience expansion before the autonomous backend path is real.
 
+## V2 Intelligence Runtime
+
+FastAPI is now the authoritative runtime for autonomous research. The Node server remains v1 compatibility infrastructure during migration and does not share a writable intelligence database.
+
+The runtime uses Temporal for durable task graphs, PostgreSQL with `pgvector` for state and memory, MinIO-compatible immutable artifact storage, configured Red Hat MaaS reasoning, Brave Web and News discovery, and application-controlled HTML, PDF, and browser retrieval.
+
+Brave provider results preserve query provenance, ranking position, timestamps, raw provider artifacts, and provider metadata. They remain discovery hints until the system retrieves, extracts, normalizes, and verifies a source. The architecture remains open to additional approved discovery providers through capability-specific discovery connectors.
+
+See [INTELLIGENCE_RUNTIME.md](INTELLIGENCE_RUNTIME.md) for startup, persistence, learning, and validation details.
+
 ## Next Session Starting Point
 
 Read this file first, then [MAAS_MODELS.md](MAAS_MODELS.md).

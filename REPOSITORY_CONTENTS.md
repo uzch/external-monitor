@@ -12,6 +12,7 @@ It intentionally does not contain raw source workbooks, customer data, credentia
 | Understand the product promise | `README.md` |
 | Understand users, value, and workflow | `docs/PRODUCT.md` |
 | Understand system boundaries | `docs/ARCHITECTURE.md` |
+| Understand the intelligence architecture quality bar and current capability assessment | `docs/INTELLIGENCE_ARCHITECTURE_QUALITY.md` |
 | Understand data contracts | `docs/DATA_CONTRACTS.md` |
 | Understand source interpretation limits | `docs/SOURCE_BOUNDARIES.md` |
 | Understand synthetic fixture rules | `fixtures/README.md` |

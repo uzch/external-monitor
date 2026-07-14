@@ -11,6 +11,8 @@
     "probe:maas": "npm run build && node dist-server/server/probes/maasProbe.js",
     "benchmark:maas": "npm run build && node dist-server/server/probes/maasBenchmark.js",
     "probe:retrieval": "npm run build && node dist-server/server/probes/retrievalProbe.js",
+    "intelligence:sync": "uv --directory intelligence sync --all-groups",
+    "intelligence:test": "uv --directory intelligence run pytest",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "npm run build && playwright test",
