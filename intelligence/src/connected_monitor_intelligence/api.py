@@ -24,7 +24,6 @@ from .contracts import (
 )
 from .pipeline import IntelligencePipeline
 from .store import IntelligenceStore
-from .text_quality import repair_mojibake
 from .workflows import ResearchWorkflow
 
 
@@ -156,15 +155,12 @@ async def get_brief(run_id: str) -> BriefView:
     signals = [_signal_view(store, signal.id) for signal in store.list_signals(run_id)]
     return BriefView(
         run=_run_summary(run),
-        executive_summary=repair_mojibake(brief.executive_summary) if brief else None,
+        executive_summary=brief.executive_summary if brief else None,
         top_signals=[item for item in signals if item.disposition == "keep"],
         watch_items=[item for item in signals if item.disposition == "watch"],
         rejected_items=[item for item in signals if item.disposition == "reject"],
         abstained_items=[item for item in signals if item.disposition == "abstain"],
-        unknowns_and_guardrails=[
-            repair_mojibake(item)
-            for item in (brief.unknowns_and_guardrails if brief else run.coverage_limitations)
-        ],
+        unknowns_and_guardrails=brief.unknowns_and_guardrails if brief else run.coverage_limitations,
     )
 
 
@@ -297,22 +293,18 @@ def _signal_view(store: IntelligenceStore, signal_id: str) -> SignalView:
     evidence, segment = evidence_rows[0]
     return SignalView(
         id=signal.id,
-        external_fact=repair_mojibake(claim.external_fact),
-        excerpt=repair_mojibake(_evidence_preview(segment.text, claim.external_fact)),
+        external_fact=claim.external_fact,
+        excerpt=_evidence_preview(segment.text, claim.external_fact),
         source_url=evidence.canonical_url,
         publisher=evidence.publisher,
         publication_date=evidence.publication_date,
         retrieved_at=evidence.retrieved_at,
         disposition=signal.disposition,
         priority_tier=signal.priority_tier,
-        disposition_rationale=repair_mojibake(signal.disposition_rationale),
-        red_hat_relevance_hypothesis=repair_mojibake(signal.relevance_hypothesis)
-        if signal.relevance_hypothesis
-        else None,
-        validation_question=repair_mojibake(signal.validation_question)
-        if signal.validation_question
-        else None,
-        uncertainty=repair_mojibake(signal.uncertainty),
+        disposition_rationale=signal.disposition_rationale,
+        red_hat_relevance_hypothesis=signal.relevance_hypothesis,
+        validation_question=signal.validation_question,
+        uncertainty=signal.uncertainty,
         verification_state=verification.state,
         evidence_ids=[item[0].id for item in evidence_rows],
     )

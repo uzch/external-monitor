@@ -11,7 +11,6 @@ from pydantic import BaseModel, ValidationError
 from .artifacts import ArtifactStore
 from .config import Settings
 from .store import IntelligenceStore
-from .text_quality import repair_text_tree
 
 Output = TypeVar("Output", bound=BaseModel)
 _REQUEST_LOCK = asyncio.Lock()
@@ -196,7 +195,6 @@ class MaaSClient:
 
     @staticmethod
     def _normalize_wire_output(output_type: type[Output], value: object) -> object:
-        value = repair_text_tree(value)
         if output_type.__name__ != "FactExtraction" or not isinstance(value, dict):
             return value
         facts = value.get("facts")

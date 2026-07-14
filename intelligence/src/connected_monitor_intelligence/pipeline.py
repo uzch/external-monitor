@@ -26,7 +26,6 @@ from .retrieval import AcquiredDocument, RetrievalRouter
 from .store import IntelligenceStore
 from .tavily_api import TavilyApiConnector
 from .tavily_mcp import TavilyMcpConnector
-from .text_quality import repair_mojibake
 
 
 class IntelligencePipeline:
@@ -271,9 +270,7 @@ class IntelligencePipeline:
     @staticmethod
     def _document_from_tavily_extract(url: str, raw: dict, method: str) -> AcquiredDocument:
         item = IntelligencePipeline._first_tavily_extract_item(raw)
-        text = repair_mojibake(
-            str(item.get("raw_content") or item.get("content") or item.get("text") or "").strip()
-        )
+        text = str(item.get("raw_content") or item.get("content") or item.get("text") or "").strip()
         canonical_url = str(item.get("url") or url)
         publisher = urlparse(canonical_url).hostname or "unknown"
         diagnostics = ["provider_extract_input_not_verified_evidence"]
