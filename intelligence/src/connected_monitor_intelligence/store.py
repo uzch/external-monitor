@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .contracts import FeedbackCreate, ResearchRunCreate, RunState
@@ -20,6 +20,7 @@ from .models import (
     Evidence,
     EvidenceSegment,
     FeedbackEvent,
+    FeedbackRevision,
     LearningRecord,
     ModelInvocation,
     PolicyEvaluation,
@@ -52,6 +53,23 @@ class IntelligenceStore:
     def get_run(self, run_id: str) -> ResearchRun | None:
         with self._session() as session:
             return session.get(ResearchRun, run_id)
+
+    def list_runs(self, limit: int = 100) -> list[ResearchRun]:
+        with self._session() as session:
+            return session.scalars(
+                select(ResearchRun).order_by(ResearchRun.created_at.desc()).limit(limit)
+            ).all()
+
+    def signal_counts(self, run_id: str) -> dict[str, int]:
+        with self._session() as session:
+            rows = session.execute(
+                select(Signal.disposition, func.count(Signal.id))
+                .where(Signal.run_id == run_id)
+                .group_by(Signal.disposition)
+            ).all()
+            counts = {"keep": 0, "watch": 0, "reject": 0, "abstain": 0}
+            counts.update({disposition: count for disposition, count in rows})
+            return counts
 
     def set_run_state(self, run_id: str, state: RunState | str, blocked_reason: str | None = None) -> None:
         with self._session() as session:
@@ -308,6 +326,29 @@ class IntelligenceStore:
             ).all()
             return [(row[0], row[1]) for row in rows]
 
+    def query_provenance_for_claim(self, claim_id: str) -> list[dict[str, Any]]:
+        with self._session() as session:
+            rows = session.execute(
+                select(DiscoveryQuery, DiscoveryResult, Evidence)
+                .join(DiscoveryResult, DiscoveryResult.query_id == DiscoveryQuery.id)
+                .join(Evidence, Evidence.discovery_result_id == DiscoveryResult.id)
+                .join(EvidenceSegment, EvidenceSegment.evidence_id == Evidence.id)
+                .join(ClaimEvidence, ClaimEvidence.evidence_segment_id == EvidenceSegment.id)
+                .where(ClaimEvidence.claim_id == claim_id)
+            ).all()
+            return [
+                {
+                    "query": query.query,
+                    "provider": result.provider,
+                    "operation": result.operation,
+                    "rank_position": result.rank_position,
+                    "discovery_result_id": result.id,
+                    "evidence_id": evidence.id,
+                    "executed_at": query.executed_at,
+                }
+                for query, result, evidence in rows
+            ]
+
     def record_verification(
         self, claim_id: str, state: str, rationale: str, cited_evidence_ids: list[str], policy_version: str
     ) -> Verification:
@@ -549,6 +590,48 @@ class IntelligenceStore:
                 .where(FeedbackEvent.signal_id == signal_id)
                 .order_by(FeedbackEvent.created_at)
             ).all()
+
+    def feedback_revisions(self, signal_id: str) -> list[FeedbackRevision]:
+        with self._session() as session:
+            return session.scalars(
+                select(FeedbackRevision)
+                .where(FeedbackRevision.signal_id == signal_id)
+                .order_by(FeedbackRevision.revision)
+            ).all()
+
+    def replace_feedback(
+        self,
+        run_id: str,
+        signal_id: str,
+        verdict: str,
+        reasons: list[str],
+        explanation: str | None,
+        expected_revision: int,
+    ) -> FeedbackRevision:
+        with self._session() as session:
+            session.execute(select(Signal.id).where(Signal.id == signal_id).with_for_update())
+            current = session.scalar(
+                select(FeedbackRevision)
+                .where(FeedbackRevision.signal_id == signal_id, FeedbackRevision.is_current.is_(True))
+                .with_for_update()
+            )
+            current_revision = current.revision if current else 0
+            if current_revision != expected_revision:
+                raise ValueError("Feedback was updated elsewhere. Reload the signal before replacing it.")
+            if current:
+                current.is_current = False
+            revision = FeedbackRevision(
+                run_id=run_id,
+                signal_id=signal_id,
+                revision=current_revision + 1,
+                verdict=verdict,
+                reasons=reasons,
+                explanation=explanation,
+                is_current=True,
+            )
+            session.add(revision)
+            session.commit()
+            return revision
 
     def record_outcome(
         self, run_id: str, signal_id: str | None, outcome_type: str, notes: str | None
