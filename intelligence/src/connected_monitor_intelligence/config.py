@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     maas_api_key: str | None = Field(default=None, validation_alias="CM_MAAS_API_KEY")
     maas_model: str = Field(default="gpt-oss-120b", validation_alias="CM_MAAS_MODEL")
     maas_timeout_ms: int = Field(default=30000, validation_alias="CM_MAAS_TIMEOUT_MS", ge=1000, le=120000)
+    maas_min_interval_ms: int = Field(
+        default=1000, validation_alias="CM_MAAS_MIN_INTERVAL_MS", ge=0, le=10000
+    )
     brave_api_key: str | None = Field(default=None, validation_alias="CM_BRAVE_SEARCH_API_KEY")
     brave_timeout_ms: int = Field(
         default=15000, validation_alias="CM_BRAVE_SEARCH_TIMEOUT_MS", ge=1000, le=60000
@@ -54,8 +57,11 @@ class Settings(BaseSettings):
         default=8_000_000, validation_alias="CM_RETRIEVAL_MAX_BYTES", ge=1024, le=50_000_000
     )
     max_plan_revisions: int = Field(default=2, validation_alias="CM_MAX_PLAN_REVISIONS", ge=0, le=5)
-    max_queries: int = Field(default=12, validation_alias="CM_MAX_RESEARCH_QUERIES", ge=1, le=30)
-    max_resources: int = Field(default=25, validation_alias="CM_MAX_RESEARCH_RESOURCES", ge=1, le=100)
+    max_queries: int = Field(default=3, validation_alias="CM_MAX_RESEARCH_QUERIES", ge=1, le=30)
+    max_resources: int = Field(default=4, validation_alias="CM_MAX_RESEARCH_RESOURCES", ge=1, le=100)
+    max_candidate_claims: int = Field(
+        default=4, validation_alias="CM_MAX_CANDIDATE_CLAIMS", ge=1, le=24
+    )
     embedding_model: str = Field(default="BAAI/bge-small-en-v1.5", validation_alias="CM_EMBEDDING_MODEL")
 
     @property

@@ -294,7 +294,7 @@ def _signal_view(store: IntelligenceStore, signal_id: str) -> SignalView:
     return SignalView(
         id=signal.id,
         external_fact=claim.external_fact,
-        excerpt=segment.text[:1200],
+        excerpt=_evidence_preview(segment.text, claim.external_fact),
         source_url=evidence.canonical_url,
         publisher=evidence.publisher,
         publication_date=evidence.publication_date,
@@ -308,3 +308,23 @@ def _signal_view(store: IntelligenceStore, signal_id: str) -> SignalView:
         verification_state=verification.state,
         evidence_ids=[item[0].id for item in evidence_rows],
     )
+
+
+def _evidence_preview(text: str, external_fact: str, limit: int = 1200) -> str:
+    if len(text) <= limit:
+        return text
+    meaningful_words = sorted(
+        {word.strip(".,:;()[]{}\"'") for word in external_fact.split() if len(word) >= 7},
+        key=len,
+        reverse=True,
+    )
+    normalized = text.casefold()
+    anchor = next(
+        (normalized.find(word.casefold()) for word in meaningful_words if word.casefold() in normalized),
+        0,
+    )
+    start = max(0, anchor - 240)
+    end = min(len(text), start + limit)
+    prefix = "..." if start else ""
+    suffix = "..." if end < len(text) else ""
+    return f"{prefix}{text[start:end].strip()}{suffix}"
