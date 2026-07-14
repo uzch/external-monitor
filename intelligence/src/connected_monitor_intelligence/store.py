@@ -400,6 +400,10 @@ class IntelligenceStore:
             ).first()
             return tuple(row) if row else None
 
+    def signal_for_claim(self, claim_id: str) -> Signal | None:
+        with self._session() as session:
+            return session.scalar(select(Signal).where(Signal.claim_id == claim_id))
+
     def record_brief(self, run_id: str, executive_summary: str, unknowns: list[str]) -> Brief:
         with self._session() as session:
             brief = Brief(
