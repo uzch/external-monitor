@@ -59,9 +59,21 @@ async def capabilities() -> dict:
     return {
         "reasoning": {"provider": "red_hat_maas", "available": settings.maas_configured},
         "discovery": {
-            "provider": "brave",
-            "web": settings.brave_configured,
-            "news": settings.brave_configured,
+            "selection_policy": ["tavily_api", "tavily_mcp", "brave"],
+            "tavily_api": {
+                "available": settings.tavily_api_configured,
+                "operations": ["search", "extract"] if settings.tavily_api_configured else [],
+            },
+            "tavily_mcp": {
+                "available": settings.tavily_mcp_configured,
+                "operations": ["search", "extract", "crawl", "map"]
+                if settings.tavily_mcp_configured
+                else [],
+            },
+            "brave": {
+                "available": settings.brave_configured,
+                "operations": ["web_search", "news_search"] if settings.brave_configured else [],
+            },
         },
         "acquisition": {"html": True, "pdf": True, "browser": True},
         "blockers": blockers,

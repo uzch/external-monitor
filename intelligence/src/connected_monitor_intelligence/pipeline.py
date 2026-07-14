@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from hashlib import sha256
+from urllib.parse import urlparse
 
 from .artifacts import ArtifactStore
 from .brave import BraveDiscovery
@@ -18,8 +20,10 @@ from .contracts import (
 )
 from .embeddings import EmbeddingUnavailable, embed_text
 from .maas import MaaSClient
-from .retrieval import RetrievalRouter
+from .retrieval import AcquiredDocument, RetrievalRouter
 from .store import IntelligenceStore
+from .tavily_api import TavilyApiConnector
+from .tavily_mcp import TavilyMcpConnector
 
 
 class IntelligencePipeline:
@@ -29,14 +33,16 @@ class IntelligencePipeline:
         self.artifacts = ArtifactStore(configured_settings)
         self.maas = MaaSClient(configured_settings, self.store, self.artifacts)
         self.brave = BraveDiscovery(configured_settings, self.store, self.artifacts)
+        self.tavily_api = TavilyApiConnector(configured_settings, self.store, self.artifacts)
+        self.tavily_mcp = TavilyMcpConnector(configured_settings, self.store, self.artifacts)
         self.retrieval = RetrievalRouter(configured_settings)
 
     def validate_readiness(self) -> list[str]:
         blockers = []
         if not self.settings.maas_configured:
             blockers.append("MaaS reasoning is not configured.")
-        if not self.settings.brave_configured:
-            blockers.append("Brave Web and News discovery is not configured.")
+        if not self.settings.discovery_configured:
+            blockers.append("No live discovery provider is configured.")
         return blockers
 
     async def plan(self, run_id: str, replan_reason: str | None = None) -> list[str]:
@@ -93,16 +99,16 @@ class IntelligencePipeline:
         )
         try:
             plan = self._run(run_id).plan_data or {}
-            result = await self.brave.search(
+            result = await self._discover_with_policy(
                 run_id, revision, query, str(plan.get("source_plan") or "Research-plan query"), kind
-            )  # type: ignore[arg-type]
+            )
             self.store.finish_task(
                 task_id,
                 {
                     "query_id": result.query_id,
                     "result_ids": result.result_ids,
-                    "provider": "brave",
-                    "operation": f"brave_{kind}_search",
+                    "provider": result.provider,
+                    "operation": result.operation,
                 },
             )
             return result.result_ids
@@ -138,20 +144,16 @@ class IntelligencePipeline:
             result = self.store.get_discovery_result(discovery_result_id)
             if not result:
                 raise KeyError(f"Unknown discovery result {discovery_result_id}")
-            document = await self.retrieval.acquire(result.url)
-            raw_artifact = self.store.record_artifact(
-                run_id,
-                "source_response",
-                self.artifacts.put_bytes(run_id, "source_response", document.content_type, document.body),
-                document.canonical_url,
-            )
-            evidence = self.store.record_evidence(run_id, result.id, raw_artifact.id, document)
+            document, raw_artifact_id, provider_operation = await self._acquire_with_policy(run_id, result)
+            evidence = self.store.record_evidence(run_id, result.id, raw_artifact_id, document)
             self.store.record_learning(
                 run_id,
                 "acquisition",
                 {
                     "discovery_result_id": result.id,
                     "evidence_id": evidence.id,
+                    "discovery_provider": result.provider,
+                    "acquisition_provider_operation": provider_operation,
                     "extraction_method": document.extraction_method,
                     "quality": document.extraction_quality,
                     "diagnostics": document.diagnostics,
@@ -169,6 +171,117 @@ class IntelligencePipeline:
         except Exception as error:
             self.store.fail_task(task_id, str(error))
             return None
+
+    async def _discover_with_policy(self, run_id: str, revision: int, query: str, rationale: str, kind: str):
+        topic = "news" if kind == "news" else "general"
+        providers = []
+        if self.settings.tavily_api_configured:
+            providers.append(("tavily_api", f"tavily_api_{topic}_search", self.tavily_api.search))
+        if self.settings.tavily_mcp_configured:
+            providers.append(("tavily_mcp", f"tavily_mcp_{topic}_search", self.tavily_mcp.search))
+        if self.settings.brave_configured:
+            providers.append(("brave", f"brave_{kind}_search", self.brave.search))
+        errors: list[dict[str, str]] = []
+        for provider, operation, search in providers:
+            try:
+                result = await search(run_id, revision, query, rationale, topic if provider != "brave" else kind)
+                if result.result_ids:
+                    return _DiscoveryOutcome(result.query_id, result.result_ids, provider, operation)
+                errors.append({"provider": provider, "operation": operation, "error": "no_results"})
+            except Exception as error:
+                errors.append({"provider": provider, "operation": operation, "error": str(error)[:500]})
+        self.store.record_learning(
+            run_id,
+            "provider_fallback_exhausted",
+            {"stage": "discovery", "query": query, "kind": kind, "errors": errors},
+        )
+        raise RuntimeError("No configured discovery provider returned results.")
+
+    async def _acquire_with_policy(self, run_id: str, discovery_result) -> tuple[AcquiredDocument, str, str]:
+        if discovery_result.provider == "tavily_api" and self.settings.tavily_api_configured:
+            try:
+                extracted = await self.tavily_api.extract(run_id, discovery_result.url)
+                return self._document_from_tavily_extract(discovery_result.url, extracted.raw, "tavily_api_extract"), extracted.artifact_id, "tavily_api_extract"
+            except Exception as error:
+                self.store.record_learning(
+                    run_id,
+                    "provider_fallback",
+                    {
+                        "stage": "acquisition",
+                        "provider": "tavily_api",
+                        "operation": "tavily_api_extract",
+                        "url": discovery_result.url,
+                        "error": str(error)[:500],
+                    },
+                )
+        if discovery_result.provider == "tavily_mcp" and self.settings.tavily_mcp_configured:
+            try:
+                extracted = await self.tavily_mcp.extract(run_id, discovery_result.url)
+                return self._document_from_tavily_extract(discovery_result.url, extracted.raw, "tavily_mcp_extract"), extracted.artifact_id, "tavily_mcp_extract"
+            except Exception as error:
+                self.store.record_learning(
+                    run_id,
+                    "provider_fallback",
+                    {
+                        "stage": "acquisition",
+                        "provider": "tavily_mcp",
+                        "operation": "tavily_mcp_extract",
+                        "url": discovery_result.url,
+                        "error": str(error)[:500],
+                    },
+                )
+        document = await self.retrieval.acquire(discovery_result.url)
+        raw_artifact = self.store.record_artifact(
+            run_id,
+            "source_response",
+            self.artifacts.put_bytes(run_id, "source_response", document.content_type, document.body),
+            document.canonical_url,
+        )
+        return document, raw_artifact.id, "system_controlled_retrieval"
+
+    @staticmethod
+    def _document_from_tavily_extract(url: str, raw: dict, method: str) -> AcquiredDocument:
+        item = IntelligencePipeline._first_tavily_extract_item(raw)
+        text = str(item.get("raw_content") or item.get("content") or item.get("text") or "").strip()
+        canonical_url = str(item.get("url") or url)
+        publisher = urlparse(canonical_url).hostname or "unknown"
+        diagnostics = ["provider_extract_input_not_verified_evidence"]
+        if not text:
+            diagnostics.append("provider_extract_returned_no_text")
+        body = text.encode("utf-8")
+        return AcquiredDocument(
+            canonical_url=canonical_url,
+            content_type="text/plain",
+            body=body,
+            text=text,
+            title=item.get("title") if isinstance(item.get("title"), str) else None,
+            publisher=publisher.removeprefix("www."),
+            publication_date=None,
+            retrieved_at=datetime.now(UTC),
+            extraction_method=method,
+            extraction_quality=min(1.0, len(text) / 3000) if text else 0.0,
+            structure={"provider_extract": True, "source": method},
+            diagnostics=diagnostics,
+        )
+
+    @staticmethod
+    def _first_tavily_extract_item(raw: dict) -> dict:
+        result = raw.get("result") if isinstance(raw, dict) else None
+        candidates = []
+        if isinstance(raw.get("results"), list):
+            candidates = raw["results"]
+        elif isinstance(result, dict) and isinstance(result.get("results"), list):
+            candidates = result["results"]
+        elif isinstance(result, dict):
+            content = result.get("content")
+            if isinstance(content, list):
+                for item in content:
+                    if isinstance(item, dict) and isinstance(item.get("json"), dict):
+                        nested = item["json"].get("results")
+                        if isinstance(nested, list):
+                            candidates = nested
+                            break
+        return next((item for item in candidates if isinstance(item, dict)), {})
 
     async def extract_and_resolve(self, run_id: str, evidence_id: str) -> list[str]:
         task_id = self.store.start_task(run_id, "evidence_extraction", {"evidence_id": evidence_id})
@@ -432,3 +545,11 @@ class IntelligencePipeline:
     @staticmethod
     def _normalize_fact(value: str) -> str:
         return " ".join(value.casefold().split())
+
+
+class _DiscoveryOutcome:
+    def __init__(self, query_id: str, result_ids: list[str], provider: str, operation: str):
+        self.query_id = query_id
+        self.result_ids = result_ids
+        self.provider = provider
+        self.operation = operation
