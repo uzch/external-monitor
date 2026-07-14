@@ -67,9 +67,9 @@ Frontend status:
 
 FastAPI is now the authoritative runtime for autonomous research. The Node server remains v1 compatibility infrastructure during migration and does not share a writable intelligence database.
 
-The runtime uses Temporal for durable task graphs, PostgreSQL with `pgvector` for state and memory, MinIO-compatible immutable artifact storage, configured Red Hat MaaS reasoning, Brave Web and News discovery, and application-controlled HTML, PDF, and browser retrieval.
+The runtime uses Temporal for durable task graphs, PostgreSQL with `pgvector` for state and memory, MinIO-compatible immutable artifact storage, configured Red Hat MaaS reasoning, Tavily direct API discovery and extraction, Tavily MCP discovery and extraction, Brave Web and News discovery, and application-controlled HTML, PDF, and browser retrieval.
 
-Brave provider results preserve query provenance, ranking position, timestamps, raw provider artifacts, and provider metadata. They remain discovery hints until the system retrieves, extracts, normalizes, and verifies a source. The architecture remains open to additional approved discovery providers through capability-specific discovery connectors.
+Provider results preserve query provenance, ranking position, timestamps, raw provider artifacts, provider path, operation name, and provider metadata. They remain discovery or acquisition inputs until the system normalizes, cites, resolves, and verifies the source. The architecture remains open to additional approved discovery providers through capability-specific discovery connectors.
 
 See [INTELLIGENCE_RUNTIME.md](INTELLIGENCE_RUNTIME.md) for startup, persistence, learning, and validation details.
 

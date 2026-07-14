@@ -11,6 +11,7 @@ class Settings(BaseSettings):
         env_file=Path(__file__).resolve().parents[3] / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     environment: str = Field(default="local", validation_alias="CM_ENVIRONMENT")
@@ -37,6 +38,15 @@ class Settings(BaseSettings):
     brave_timeout_ms: int = Field(
         default=15000, validation_alias="CM_BRAVE_SEARCH_TIMEOUT_MS", ge=1000, le=60000
     )
+    tavily_api_key: str | None = Field(default=None, validation_alias="CM_TAVILY_API_KEY")
+    tavily_api_timeout_ms: int = Field(
+        default=20000, validation_alias="CM_TAVILY_API_TIMEOUT_MS", ge=1000, le=120000
+    )
+    tavily_mcp_url: str | None = Field(default=None, validation_alias="CM_TAVILY_MCP_URL")
+    tavily_mcp_token: str | None = Field(default=None, validation_alias="CM_TAVILY_MCP_TOKEN")
+    tavily_mcp_timeout_ms: int = Field(
+        default=20000, validation_alias="CM_TAVILY_MCP_TIMEOUT_MS", ge=1000, le=120000
+    )
     retrieval_timeout_ms: int = Field(
         default=20000, validation_alias="CM_RETRIEVAL_TIMEOUT_MS", ge=1000, le=120000
     )
@@ -55,6 +65,18 @@ class Settings(BaseSettings):
     @property
     def brave_configured(self) -> bool:
         return bool(self.brave_api_key)
+
+    @property
+    def tavily_api_configured(self) -> bool:
+        return bool(self.tavily_api_key)
+
+    @property
+    def tavily_mcp_configured(self) -> bool:
+        return bool(self.tavily_mcp_url)
+
+    @property
+    def discovery_configured(self) -> bool:
+        return bool(self.tavily_api_configured or self.tavily_mcp_configured or self.brave_configured)
 
 
 settings = Settings()
