@@ -138,6 +138,22 @@ class FeedbackCreate(StrictModel):
     notes: Annotated[str | None, Field(max_length=4000)] = None
 
 
+class FeedbackRevisionCreate(StrictModel):
+    verdict: Literal["useful", "not_useful", "unsure"]
+    reasons: list[
+        Literal["wrong_relevance", "incorrect_claim", "weak_source", "already_known", "wrong_entity"]
+    ] = Field(default_factory=list, max_length=5)
+    explanation: Annotated[str | None, Field(max_length=4000)] = None
+    expected_revision: Annotated[int, Field(ge=0)] = 0
+
+    @model_validator(mode="after")
+    def validate_feedback(self) -> FeedbackRevisionCreate:
+        self.reasons = list(dict.fromkeys(self.reasons))
+        if self.verdict == "not_useful" and not self.explanation:
+            raise ValueError("An explanation is required for not_useful feedback")
+        return self
+
+
 class OutcomeCreate(StrictModel):
     outcome_type: Literal["validated", "not_validated", "acted_on", "not_actionable", "unknown"]
     notes: Annotated[str | None, Field(max_length=4000)] = None
@@ -153,6 +169,7 @@ class RunSummary(StrictModel):
     updated_at: datetime
     coverage_limitations: list[str]
     blocked_reason: str | None
+    disposition_counts: dict[str, int] = Field(default_factory=dict)
 
 
 class SignalView(StrictModel):
@@ -172,6 +189,33 @@ class SignalView(StrictModel):
     verification_state: str
     evidence_ids: list[str]
     feedback_types: list[str]
+    account_match_basis: str
+    verification_rationale: str
+    source_category: str
+    query_provenance: list[dict]
+    feedback: FeedbackCurrentView
+
+
+class FeedbackRevisionView(StrictModel):
+    id: str
+    revision: int
+    verdict: Literal["useful", "not_useful", "unsure"]
+    reasons: list[str]
+    explanation: str | None
+    created_at: datetime
+
+
+class FeedbackCurrentView(StrictModel):
+    state: Literal["none", "current", "legacy_unresolved"]
+    current: FeedbackRevisionView | None = None
+    history: list[FeedbackRevisionView] = Field(default_factory=list)
+    legacy_tags: list[str] = Field(default_factory=list)
+
+
+class SignalLedgerView(StrictModel):
+    run: RunSummary
+    signals: list[SignalView]
+    counts: dict[str, int]
 
 
 class BriefView(StrictModel):

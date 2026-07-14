@@ -4,7 +4,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from temporalio.client import Client
@@ -14,12 +14,15 @@ from .config import settings
 from .contracts import (
     AccountContext,
     BriefView,
-    FeedbackCreate,
+    FeedbackCurrentView,
+    FeedbackRevisionCreate,
+    FeedbackRevisionView,
     OutcomeCreate,
     PolicyCandidateCreate,
     PolicyEvaluationRequest,
     ResearchRunCreate,
     RunSummary,
+    SignalLedgerView,
     SignalView,
 )
 from .pipeline import IntelligencePipeline
@@ -34,6 +37,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Connected Monitor Intelligence API", version="2.0.0", lifespan=lifespan)
+signal_filter_query = Query(default=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -42,7 +46,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:5173",
     ],
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["Content-Type"],
 )
 
@@ -111,6 +115,12 @@ async def get_research_run(run_id: str) -> RunSummary:
     return _run_summary(run)
 
 
+@app.get("/v2/research-runs", response_model=list[RunSummary])
+async def list_research_runs() -> list[RunSummary]:
+    store = IntelligenceStore()
+    return [_run_summary(run, store) for run in store.list_runs()]
+
+
 @app.get("/v2/research-runs/{run_id}/events")
 async def research_events(run_id: str) -> StreamingResponse:
     _require_run(run_id)
@@ -154,7 +164,7 @@ async def get_brief(run_id: str) -> BriefView:
     brief = store.get_brief(run_id)
     signals = [_signal_view(store, signal.id) for signal in store.list_signals(run_id)]
     return BriefView(
-        run=_run_summary(run),
+        run=_run_summary(run, store),
         executive_summary=brief.executive_summary if brief else None,
         top_signals=[item for item in signals if item.disposition == "keep"],
         watch_items=[item for item in signals if item.disposition == "watch"],
@@ -162,6 +172,48 @@ async def get_brief(run_id: str) -> BriefView:
         abstained_items=[item for item in signals if item.disposition == "abstain"],
         unknowns_and_guardrails=brief.unknowns_and_guardrails if brief else run.coverage_limitations,
     )
+
+
+@app.get("/v2/research-runs/{run_id}/signals", response_model=SignalLedgerView)
+async def get_signal_ledger(
+    run_id: str,
+    disposition: list[str] | None = signal_filter_query,
+    priority: list[str] | None = signal_filter_query,
+    verification: list[str] | None = signal_filter_query,
+    source: str | None = None,
+    feedback: list[str] | None = signal_filter_query,
+) -> SignalLedgerView:
+    store = IntelligenceStore()
+    run = _require_run(run_id)
+    signals = [_signal_view(store, signal.id) for signal in store.list_signals(run_id)]
+    order = {"keep": 0, "watch": 1, "reject": 2, "abstain": 3}
+    signals.sort(key=lambda item: (order.get(item.disposition, 4), item.priority_tier, item.id))
+    if disposition:
+        signals = [item for item in signals if item.disposition in disposition]
+    if priority:
+        signals = [item for item in signals if item.priority_tier in priority]
+    if verification:
+        signals = [item for item in signals if item.verification_state in verification]
+    if source:
+        needle = source.casefold()
+        signals = [
+            item
+            for item in signals
+            if needle in item.publisher.casefold() or needle in str(item.source_url).casefold()
+        ]
+    if feedback:
+        signals = [
+            item
+            for item in signals
+            if item.feedback.current and item.feedback.current.verdict in feedback
+        ]
+    return SignalLedgerView(run=_run_summary(run, store), signals=signals, counts=store.signal_counts(run_id))
+
+
+@app.get("/v2/research-runs/{run_id}/signals/{signal_id}", response_model=SignalView)
+async def get_signal_audit(run_id: str, signal_id: str) -> SignalView:
+    _require_signal(run_id, signal_id)
+    return _signal_view(IntelligenceStore(), signal_id)
 
 
 @app.get("/v2/research-runs/{run_id}/trace")
@@ -188,11 +240,30 @@ async def get_trace(run_id: str) -> dict:
     }
 
 
-@app.post("/v2/research-runs/{run_id}/signals/{signal_id}/feedback", status_code=201)
-async def record_feedback(run_id: str, signal_id: str, feedback: FeedbackCreate) -> dict:
+@app.get("/v2/research-runs/{run_id}/signals/{signal_id}/feedback", response_model=FeedbackCurrentView)
+async def get_feedback(run_id: str, signal_id: str) -> FeedbackCurrentView:
     _require_signal(run_id, signal_id)
-    event = IntelligenceStore().record_feedback(run_id, signal_id, feedback)
-    return {"id": event.id, "created_at": event.created_at}
+    return _feedback_view(IntelligenceStore(), signal_id)
+
+
+@app.put("/v2/research-runs/{run_id}/signals/{signal_id}/feedback", response_model=FeedbackCurrentView)
+async def replace_feedback(
+    run_id: str, signal_id: str, feedback: FeedbackRevisionCreate
+) -> FeedbackCurrentView:
+    _require_signal(run_id, signal_id)
+    store = IntelligenceStore()
+    try:
+        store.replace_feedback(
+            run_id,
+            signal_id,
+            feedback.verdict,
+            feedback.reasons,
+            feedback.explanation,
+            feedback.expected_revision,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    return _feedback_view(store, signal_id)
 
 
 @app.post("/v2/research-runs/{run_id}/signals/{signal_id}/outcomes", status_code=201)
@@ -270,7 +341,7 @@ def _require_signal(run_id: str, signal_id: str) -> None:
         raise HTTPException(status_code=404, detail="Research signal not found")
 
 
-def _run_summary(run) -> RunSummary:
+def _run_summary(run, store: IntelligenceStore | None = None) -> RunSummary:
     return RunSummary(
         id=run.id,
         state=run.state,
@@ -281,6 +352,7 @@ def _run_summary(run) -> RunSummary:
         updated_at=run.updated_at,
         coverage_limitations=run.coverage_limitations,
         blocked_reason=run.blocked_reason,
+        disposition_counts=(store or IntelligenceStore()).signal_counts(run.id),
     )
 
 
@@ -308,6 +380,35 @@ def _signal_view(store: IntelligenceStore, signal_id: str) -> SignalView:
         verification_state=verification.state,
         evidence_ids=[item[0].id for item in evidence_rows],
         feedback_types=[event.event_type for event in store.list_feedback(signal.id)],
+        account_match_basis=claim.account_match_basis,
+        verification_rationale=verification.rationale,
+        source_category=evidence.extraction_method,
+        query_provenance=store.query_provenance_for_claim(claim.id),
+        feedback=_feedback_view(store, signal.id),
+    )
+
+
+def _feedback_view(store: IntelligenceStore, signal_id: str) -> FeedbackCurrentView:
+    revisions = store.feedback_revisions(signal_id)
+    history = [
+        FeedbackRevisionView(
+            id=item.id,
+            revision=item.revision,
+            verdict=item.verdict,
+            reasons=item.reasons,
+            explanation=item.explanation,
+            created_at=item.created_at,
+        )
+        for item in revisions
+    ]
+    current_record = store.current_feedback_revision(signal_id)
+    current = next((item for item in history if current_record and item.id == current_record.id), None)
+    if current:
+        return FeedbackCurrentView(state="current", current=current, history=history)
+    legacy_tags = [item.event_type for item in store.list_feedback(signal_id) if item.source == "explicit"]
+    return FeedbackCurrentView(
+        state="legacy_unresolved" if legacy_tags else "none",
+        legacy_tags=legacy_tags,
     )
 
 

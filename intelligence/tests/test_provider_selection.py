@@ -64,6 +64,32 @@ async def test_valid_empty_direct_search_does_not_consume_fallback_provider() ->
     pipeline.tavily_mcp.search.assert_not_awaited()
 
 
+@pytest.mark.asyncio
+async def test_failed_ranking_is_retained_as_an_abstained_candidate() -> None:
+    pipeline = object.__new__(IntelligencePipeline)
+    pipeline.store = SimpleNamespace(
+        start_task=Mock(return_value="task-1"),
+        list_claims=Mock(return_value=[SimpleNamespace(id="claim-1", external_fact="Bounded fact")]),
+        evidence_for_claim=Mock(return_value=[(
+            SimpleNamespace(id="evidence-1", canonical_url="https://example.test/source", publisher="Example"),
+            SimpleNamespace(text="Bounded supporting evidence"),
+        )]),
+        record_verification=Mock(return_value=SimpleNamespace(id="verification-1")),
+        record_signal=Mock(return_value=SimpleNamespace(id="signal-1")),
+        signal_for_claim=Mock(return_value=None),
+        fail_task=Mock(),
+    )
+    pipeline.maas = SimpleNamespace(complete=AsyncMock(side_effect=RuntimeError("structured output unavailable")))
+    pipeline._run = Mock(return_value=SimpleNamespace(policy_version="baseline-v1"))
+
+    signal_id = await pipeline.verify_and_rank("run-1", "claim-1", 1)
+
+    assert signal_id == "signal-1"
+    assessment = pipeline.store.record_signal.call_args.args[3]
+    assert assessment.disposition == "abstain"
+    assert assessment.priority_tier == "none"
+
+
 def test_planning_fallback_is_bounded_and_account_driven() -> None:
     plan = IntelligencePipeline._fallback_plan(
         AccountContext(name="Example Account"),

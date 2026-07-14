@@ -4,7 +4,19 @@ from datetime import datetime
 from uuid import uuid4
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import JSON
@@ -290,6 +302,33 @@ class FeedbackEvent(Timestamped, Base):
     source: Mapped[str] = mapped_column(String(32), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+
+
+class FeedbackRevision(Timestamped, Base):
+    __tablename__ = "intelligence_feedback_revisions"
+    __table_args__ = (
+        UniqueConstraint("signal_id", "revision", name="uq_feedback_revision_signal_revision"),
+        Index(
+            "uq_feedback_revision_current_signal",
+            "signal_id",
+            unique=True,
+            postgresql_where=text("is_current = true"),
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    run_id: Mapped[str] = mapped_column(
+        ForeignKey("intelligence_research_runs.id", ondelete="CASCADE"), index=True
+    )
+    signal_id: Mapped[str] = mapped_column(
+        ForeignKey("intelligence_signals.id", ondelete="CASCADE"), index=True
+    )
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    verdict: Mapped[str] = mapped_column(String(32), nullable=False)
+    reasons: Mapped[list] = mapped_column(json_column(), nullable=False, default=list)
+    explanation: Mapped[str | None] = mapped_column(Text)
+    is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, default="seller")
 
 
 class LearningRecord(Timestamped, Base):

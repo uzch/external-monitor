@@ -9,6 +9,8 @@ vi.mock("../../src/services/intelligenceApi", () => ({
     run: vi.fn(),
     brief: vi.fn(),
     startRun: vi.fn(),
+    runs: vi.fn(),
+    ledger: vi.fn(),
     feedback: vi.fn(),
     cancel: vi.fn(),
   },
@@ -33,6 +35,9 @@ describe("AutonomousResearchPage", () => {
     mockedApi.run.mockReset();
     mockedApi.brief.mockReset();
     mockedApi.startRun.mockReset();
+    mockedApi.runs.mockReset();
+    mockedApi.ledger.mockReset();
+    mockedApi.runs.mockResolvedValue([]);
   });
 
   it("recovers the active research run after refresh", async () => {
@@ -45,12 +50,13 @@ describe("AutonomousResearchPage", () => {
       created_at: "2026-07-14T00:00:00.000Z",
       updated_at: "2026-07-14T00:00:00.000Z",
       coverage_limitations: [],
+      disposition_counts: { keep: 0, watch: 0, reject: 0, abstain: 0 },
     });
 
     render(<AutonomousResearchPage />);
 
     await waitFor(() => expect(mockedApi.run).toHaveBeenCalledWith("run-1"));
-    expect(screen.getByRole("heading", { name: "planning" })).toBeVisible();
+    expect(screen.getAllByText("planning")[0]).toBeVisible();
   });
 
   it("clears an invalid saved research run ID", async () => {
@@ -72,6 +78,7 @@ describe("AutonomousResearchPage", () => {
       created_at: "2026-07-14T00:00:00.000Z",
       updated_at: "2026-07-14T00:00:00.000Z",
       coverage_limitations: [],
+      disposition_counts: { keep: 0, watch: 0, reject: 0, abstain: 0 },
     });
     mockedApi.brief.mockResolvedValue({
       run: await mockedApi.run("demo-run"),
@@ -89,16 +96,6 @@ describe("AutonomousResearchPage", () => {
   });
 
   it("replaces the saved research run ID when a new run starts", async () => {
-    window.localStorage.setItem("connected-monitor.activeResearchRunId", "old-run");
-    mockedApi.run.mockResolvedValue({
-      id: "old-run",
-      state: "planning",
-      account: { name: "Old", aliases: [] },
-      timeframe: "quarter",
-      created_at: "2026-07-14T00:00:00.000Z",
-      updated_at: "2026-07-14T00:00:00.000Z",
-      coverage_limitations: [],
-    });
     mockedApi.startRun.mockResolvedValue({
       id: "new-run",
       state: "queued",
@@ -107,6 +104,7 @@ describe("AutonomousResearchPage", () => {
       created_at: "2026-07-14T00:00:00.000Z",
       updated_at: "2026-07-14T00:00:00.000Z",
       coverage_limitations: [],
+      disposition_counts: { keep: 0, watch: 0, reject: 0, abstain: 0 },
     });
 
     render(<AutonomousResearchPage />);

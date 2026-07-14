@@ -394,6 +394,8 @@ class IntelligencePipeline:
 
     async def verify_and_rank(self, run_id: str, claim_id: str, sort_order: int) -> str | None:
         task_id = self.store.start_task(run_id, "verification_and_ranking", {"claim_id": claim_id})
+        claim = None
+        verification_record = None
         try:
             claim = next((item for item in self.store.list_claims(run_id) if item.id == claim_id), None)
             if not claim:
@@ -478,7 +480,34 @@ class IntelligencePipeline:
             return signal.id
         except Exception as error:
             self.store.fail_task(task_id, str(error))
-            return None
+            if not claim:
+                return None
+            try:
+                existing_signal = self.store.signal_for_claim(claim.id)
+                if existing_signal:
+                    return existing_signal.id
+                if not verification_record:
+                    verification_record = self.store.record_verification(
+                        claim.id,
+                        "insufficient",
+                        "Verification or ranking did not complete. The candidate is retained as abstained.",
+                        [],
+                        self._run(run_id).policy_version,
+                    )
+                assessment = SignalAssessment(
+                    disposition="abstain",
+                    priority_tier="none",
+                    disposition_rationale="The candidate was not promoted because the evaluation step did not complete.",
+                    red_hat_relevance_hypothesis="No bounded relevance hypothesis is available because verification did not complete.",
+                    validation_question="What additional source-backed evidence would be needed before revisiting this candidate?",
+                    uncertainty="Evaluation did not complete, so this candidate remains unpromoted.",
+                )
+                signal = self.store.record_signal(
+                    run_id, claim.id, verification_record.id, assessment, sort_order
+                )
+                return signal.id
+            except Exception:
+                return None
 
     async def synthesize(self, run_id: str) -> str:
         task_id = self.store.start_task(run_id, "brief_synthesis", {})
