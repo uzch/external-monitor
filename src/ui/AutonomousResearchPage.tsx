@@ -4,6 +4,7 @@ import { formatDateTime } from "./format";
 import { InvalidDataState } from "./InvalidDataState";
 
 const terminalStates = new Set(["completed", "partial", "abstained", "blocked", "failed", "cancelled"]);
+const activeRunStorageKey = "connected-monitor.activeResearchRunId";
 
 export function AutonomousResearchPage() {
   const [accountName, setAccountName] = useState("");
@@ -14,6 +15,20 @@ export function AutonomousResearchPage() {
   const [brief, setBrief] = useState<IntelligenceBrief>();
   const [error, setError] = useState<unknown>();
   const [isStarting, setIsStarting] = useState(false);
+
+  useEffect(() => {
+    const queryRunId = new URLSearchParams(window.location.search).get("runId")?.trim();
+    const savedRunId = queryRunId || window.localStorage.getItem(activeRunStorageKey);
+    if (!savedRunId) {
+      return;
+    }
+    if (queryRunId) {
+      window.localStorage.setItem(activeRunStorageKey, queryRunId);
+    }
+    intelligenceApi.run(savedRunId).then(setRun).catch(() => {
+      window.localStorage.removeItem(activeRunStorageKey);
+    });
+  }, []);
 
   useEffect(() => {
     if (!run || terminalStates.has(run.state)) {
@@ -37,11 +52,13 @@ export function AutonomousResearchPage() {
     setBrief(undefined);
     setIsStarting(true);
     try {
-      setRun(await intelligenceApi.startRun({
+      const nextRun = await intelligenceApi.startRun({
         account: { name: accountName, aliases: aliases.split(",").map((value) => value.trim()).filter(Boolean) },
         focus: focus || undefined,
         timeframe,
-      }));
+      });
+      window.localStorage.setItem(activeRunStorageKey, nextRun.id);
+      setRun(nextRun);
     } catch (startError) {
       setError(startError);
     } finally {

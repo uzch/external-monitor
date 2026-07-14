@@ -19,11 +19,12 @@ from .contracts import (
     VerificationResult,
 )
 from .embeddings import EmbeddingUnavailable, embed_text
-from .maas import MaaSClient
+from .maas import MaaSClient, MaaSError
 from .retrieval import AcquiredDocument, RetrievalRouter
 from .store import IntelligenceStore
 from .tavily_api import TavilyApiConnector
 from .tavily_mcp import TavilyMcpConnector
+from .text_quality import repair_mojibake
 
 
 class IntelligencePipeline:
@@ -60,20 +61,31 @@ class IntelligencePipeline:
             except EmbeddingUnavailable as error:
                 account_memory = []
                 self.store.record_learning(run_id, "memory_unavailable", {"message": str(error)})
-            plan = await self.maas.complete(
-                run_id,
-                "planning",
-                "Create a bounded public-web research plan. Select where to look and queries that could increase evidence coverage. Do not draw conclusions. Query wording must be account-agnostic and grounded in the supplied context.",
-                {
-                    "account": account.model_dump(),
-                    "focus": run.focus,
-                    "timeframe": run.timeframe,
-                    "prior_plan": prior,
-                    "account_memory": account_memory,
-                    "replan_reason": replan_reason,
-                },
-                ResearchPlan,
-            )
+            try:
+                plan = await self.maas.complete(
+                    run_id,
+                    "planning",
+                    "Create a bounded public-web research plan. Select where to look and queries that could increase evidence coverage. Do not draw conclusions. Query wording must be account-agnostic and grounded in the supplied context.",
+                    {
+                        "account": account.model_dump(),
+                        "focus": run.focus,
+                        "timeframe": run.timeframe,
+                        "prior_plan": prior,
+                        "account_memory": account_memory,
+                        "replan_reason": replan_reason,
+                    },
+                    ResearchPlan,
+                )
+            except MaaSError as error:
+                plan = self._fallback_plan(account, run.focus, run.timeframe)
+                self.store.record_learning(
+                    run_id,
+                    "planning_degraded",
+                    {
+                        "reason": str(error)[:500],
+                        "strategy": "bounded_deterministic_queries",
+                    },
+                )
             plan_revision = self.store.save_plan(run_id, plan.model_dump(), plan.coverage_limitations)
             query_ids = [
                 f"{plan_revision}:{index}:{query}"
@@ -187,7 +199,16 @@ class IntelligencePipeline:
                 result = await search(run_id, revision, query, rationale, topic if provider != "brave" else kind)
                 if result.result_ids:
                     return _DiscoveryOutcome(result.query_id, result.result_ids, provider, operation)
-                errors.append({"provider": provider, "operation": operation, "error": "no_results"})
+                self.store.record_learning(
+                    run_id,
+                    "provider_no_results",
+                    {
+                        "provider": provider,
+                        "operation": operation,
+                        "query_id": result.query_id,
+                    },
+                )
+                return _DiscoveryOutcome(result.query_id, [], provider, operation)
             except Exception as error:
                 errors.append({"provider": provider, "operation": operation, "error": str(error)[:500]})
         self.store.record_learning(
@@ -242,7 +263,9 @@ class IntelligencePipeline:
     @staticmethod
     def _document_from_tavily_extract(url: str, raw: dict, method: str) -> AcquiredDocument:
         item = IntelligencePipeline._first_tavily_extract_item(raw)
-        text = str(item.get("raw_content") or item.get("content") or item.get("text") or "").strip()
+        text = repair_mojibake(
+            str(item.get("raw_content") or item.get("content") or item.get("text") or "").strip()
+        )
         canonical_url = str(item.get("url") or url)
         publisher = urlparse(canonical_url).hostname or "unknown"
         diagnostics = ["provider_extract_input_not_verified_evidence"]
@@ -299,8 +322,15 @@ class IntelligencePipeline:
             extraction = await self.maas.complete(
                 run_id,
                 "extraction",
-                "Extract only bounded external facts from the acquired source. Each supporting excerpt must be copied exactly from the source text. Return no fact if the source does not support it.",
+                "Extract at most three bounded external facts that directly concern the supplied account. "
+                "Every fact must name the account or a supplied alias. Each supporting_excerpt must be "
+                "copied exactly from the source text. Return {\"facts\": []} when the source does not "
+                "support an account-specific fact. Use exactly the fields external_fact, "
+                "supporting_excerpt, and uncertainty.",
                 {
+                    "account": account.model_dump(),
+                    "focus": run.focus,
+                    "timeframe": run.timeframe,
                     "source": {
                         "evidence_id": evidence.id,
                         "url": evidence.canonical_url,
@@ -314,14 +344,29 @@ class IntelligencePipeline:
                 FactExtraction,
                 [evidence.id],
             )
-            segment = self.store.get_evidence_segment(evidence.id)
+            document_segment = self.store.get_evidence_segment(evidence.id)
             claim_ids: list[str] = []
             for fact in extraction.facts:
-                if not segment or fact.supporting_excerpt not in segment.text:
+                if not document_segment:
                     continue
-                entity = await self._entity_match(run_id, account, fact.external_fact, evidence.id)
+                excerpt_start = document_segment.text.find(fact.supporting_excerpt)
+                if excerpt_start < 0:
+                    continue
+                entity = await self._entity_match(
+                    run_id,
+                    account,
+                    fact.external_fact,
+                    fact.supporting_excerpt,
+                    evidence.id,
+                )
                 if not entity.matched:
                     continue
+                claim_segment = self.store.record_evidence_segment(
+                    evidence.id,
+                    fact.supporting_excerpt,
+                    excerpt_start,
+                    excerpt_start + len(fact.supporting_excerpt),
+                )
                 cluster_key = sha256(self._normalize_fact(fact.external_fact).encode()).hexdigest()
                 claim = self.store.record_claim(
                     run_id,
@@ -330,7 +375,7 @@ class IntelligencePipeline:
                     fact.uncertainty,
                     cluster_key,
                     "matched",
-                    segment.id,
+                    claim_segment.id,
                 )
                 self.store.record_account_event_edge(account.name, cluster_key, evidence.id)
                 claim_ids.append(claim.id)
@@ -524,14 +569,32 @@ class IntelligencePipeline:
         return run
 
     async def _entity_match(
-        self, run_id: str, account: AccountContext, fact: str, evidence_id: str
+        self,
+        run_id: str,
+        account: AccountContext,
+        fact: str,
+        supporting_excerpt: str,
+        evidence_id: str,
     ) -> EntityMatch:
         aliases = [account.name, *account.aliases]
-        if any(alias.casefold() in fact.casefold() for alias in aliases):
+        bounded_text = f"{fact}\n{supporting_excerpt}".casefold()
+        if any(alias.casefold() in bounded_text for alias in aliases):
             return EntityMatch(
                 matched=True,
                 match_basis="Exact account name or configured alias appears in the extracted fact.",
                 uncertainty="Alias matching does not establish ownership, intent, or complete entity resolution.",
+            )
+        account_tokens = {
+            token.strip(".,:;()[]{}\"'").casefold()
+            for alias in aliases
+            for token in alias.split()
+            if len(token.strip(".,:;()[]{}\"'")) >= 4
+        }
+        if not any(token in bounded_text for token in account_tokens):
+            return EntityMatch(
+                matched=False,
+                match_basis="The fact and supporting passage do not name the account or a configured alias.",
+                uncertainty="No account match was established from the acquired evidence.",
             )
         return await self.maas.complete(
             run_id,
@@ -545,6 +608,31 @@ class IntelligencePipeline:
     @staticmethod
     def _normalize_fact(value: str) -> str:
         return " ".join(value.casefold().split())
+
+    @staticmethod
+    def _fallback_plan(
+        account: AccountContext, focus: str | None, timeframe: str
+    ) -> ResearchPlan:
+        account_name = " ".join(account.name.replace('"', " ").split())
+        bounded_focus = " ".join((focus or "recent public changes").split())[:300]
+        quoted_account = f'"{account_name}"'
+        return ResearchPlan(
+            source_plan=(
+                "MaaS planning was unavailable, so the runtime used bounded account-name queries "
+                "across general and news discovery."
+            ),
+            queries=[
+                f"{quoted_account} official announcements {timeframe}"[:500],
+                f"{quoted_account} {bounded_focus}"[:500],
+                f"{quoted_account} recent news {timeframe}"[:500],
+            ],
+            coverage_limitations=[
+                "MaaS planning was unavailable; deterministic query planning reduced research breadth."
+            ],
+            unresolved_questions=[
+                "Whether additional query strategies would reveal materially different public evidence."
+            ],
+        )
 
 
 class _DiscoveryOutcome:

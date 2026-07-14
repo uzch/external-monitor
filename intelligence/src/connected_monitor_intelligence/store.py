@@ -248,7 +248,24 @@ class IntelligenceStore:
 
     def get_evidence_segment(self, evidence_id: str) -> EvidenceSegment | None:
         with self._session() as session:
-            return session.scalar(select(EvidenceSegment).where(EvidenceSegment.evidence_id == evidence_id))
+            return session.scalar(
+                select(EvidenceSegment)
+                .where(EvidenceSegment.evidence_id == evidence_id)
+                .order_by(EvidenceSegment.created_at)
+            )
+
+    def record_evidence_segment(
+        self, evidence_id: str, text: str, start: int, end: int
+    ) -> EvidenceSegment:
+        with self._session() as session:
+            segment = EvidenceSegment(
+                evidence_id=evidence_id,
+                location={"type": "passage", "start": start, "end": end},
+                text=text,
+            )
+            session.add(segment)
+            session.commit()
+            return segment
 
     def record_claim(
         self,

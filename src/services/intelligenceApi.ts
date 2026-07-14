@@ -66,7 +66,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const detail = typeof body.detail === "string" ? body.detail : body.detail?.message;
     throw new Error(detail || `Intelligence request failed with ${response.status}`);
   }
-  return response.status === 202 || response.status === 204 ? (undefined as T) : response.json() as Promise<T>;
+  return response.status === 204 ? (undefined as T) : response.json() as Promise<T>;
 }
 
 export const intelligenceApi = {
