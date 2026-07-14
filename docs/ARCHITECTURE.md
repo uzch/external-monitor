@@ -69,7 +69,7 @@ FastAPI is now the authoritative runtime for autonomous research. The Node serve
 
 The runtime uses Temporal for durable task graphs, PostgreSQL with `pgvector` for state and memory, MinIO-compatible immutable artifact storage, configured Red Hat MaaS reasoning, Brave Web and News discovery, and application-controlled HTML, PDF, and browser retrieval.
 
-Brave provider results preserve query provenance, ranking position, timestamps, raw provider artifacts, and provider metadata. They remain discovery hints until the system retrieves, extracts, normalizes, and verifies a source. The architecture remains open to approved internal gateways and Tavily through capability-specific discovery connectors.
+Brave provider results preserve query provenance, ranking position, timestamps, raw provider artifacts, and provider metadata. They remain discovery hints until the system retrieves, extracts, normalizes, and verifies a source. The architecture remains open to additional approved discovery providers through capability-specific discovery connectors.
 
 See [INTELLIGENCE_RUNTIME.md](INTELLIGENCE_RUNTIME.md) for startup, persistence, learning, and validation details.
 
