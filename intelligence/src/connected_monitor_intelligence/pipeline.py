@@ -4,6 +4,8 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from urllib.parse import urlparse
 
+import httpx
+
 from .artifacts import ArtifactStore
 from .brave import BraveDiscovery
 from .config import Settings, settings
@@ -210,7 +212,13 @@ class IntelligencePipeline:
                 )
                 return _DiscoveryOutcome(result.query_id, [], provider, operation)
             except Exception as error:
-                errors.append({"provider": provider, "operation": operation, "error": str(error)[:500]})
+                errors.append(
+                    {
+                        "provider": provider,
+                        "operation": operation,
+                        "error": self._safe_provider_error(error),
+                    }
+                )
         self.store.record_learning(
             run_id,
             "provider_fallback_exhausted",
@@ -232,7 +240,7 @@ class IntelligencePipeline:
                         "provider": "tavily_api",
                         "operation": "tavily_api_extract",
                         "url": discovery_result.url,
-                        "error": str(error)[:500],
+                        "error": self._safe_provider_error(error),
                     },
                 )
         if discovery_result.provider == "tavily_mcp" and self.settings.tavily_mcp_configured:
@@ -248,7 +256,7 @@ class IntelligencePipeline:
                         "provider": "tavily_mcp",
                         "operation": "tavily_mcp_extract",
                         "url": discovery_result.url,
-                        "error": str(error)[:500],
+                        "error": self._safe_provider_error(error),
                     },
                 )
         document = await self.retrieval.acquire(discovery_result.url)
@@ -608,6 +616,14 @@ class IntelligencePipeline:
     @staticmethod
     def _normalize_fact(value: str) -> str:
         return " ".join(value.casefold().split())
+
+    @staticmethod
+    def _safe_provider_error(error: Exception) -> str:
+        if isinstance(error, httpx.HTTPStatusError):
+            return f"Provider returned HTTP {error.response.status_code}."
+        if isinstance(error, httpx.RequestError):
+            return f"Provider request failed with {type(error).__name__}."
+        return f"Provider operation failed with {type(error).__name__}."
 
     @staticmethod
     def _fallback_plan(

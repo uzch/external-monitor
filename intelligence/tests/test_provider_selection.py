@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
+import httpx
 import pytest
 
 from connected_monitor_intelligence.config import Settings
@@ -75,3 +76,14 @@ def test_planning_fallback_is_bounded_and_account_driven() -> None:
     assert plan.coverage_limitations == [
         "MaaS planning was unavailable; deterministic query planning reduced research breadth."
     ]
+
+
+def test_provider_error_diagnostics_never_include_authenticated_urls() -> None:
+    request = httpx.Request("GET", "https://example.test/mcp?token=sensitive")
+    error = httpx.ConnectError("connection failed", request=request)
+
+    diagnostic = IntelligencePipeline._safe_provider_error(error)
+
+    assert diagnostic == "Provider request failed with ConnectError."
+    assert "token" not in diagnostic
+    assert "example.test" not in diagnostic
