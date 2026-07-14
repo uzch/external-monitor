@@ -25,8 +25,9 @@ export function AutonomousResearchPage() {
     if (queryRunId) {
       window.localStorage.setItem(activeRunStorageKey, queryRunId);
     }
-    intelligenceApi.run(savedRunId).then(setRun).catch(() => {
+    intelligenceApi.run(savedRunId).then(setRun).catch((loadError) => {
       window.localStorage.removeItem(activeRunStorageKey);
+      setError(loadError);
     });
   }, []);
 
@@ -135,13 +136,13 @@ function BriefView({ brief }: { brief: IntelligenceBrief }) {
   return (
     <div className="panel brief-panel">
       <div className="section-heading"><div><p className="eyebrow">Account signal brief</p><h2>{brief.executive_summary ?? "No brief is available yet."}</h2></div></div>
-      {groups.map(([title, signals]) => signals.length ? <section className="brief-group" key={title}><h3>{title}</h3>{signals.map((signal) => <article className="signal-card" key={signal.id}><p className="eyebrow">{signal.priority_tier} priority - {signal.verification_state}</p><h4>{signal.external_fact}</h4><p>{signal.red_hat_relevance_hypothesis ?? "No validation action recommended."}</p><p className="muted-text">Validate: {signal.validation_question ?? "No validation action recommended."}</p><details><summary>Evidence and uncertainty</summary><p>{signal.excerpt}</p><a href={signal.source_url} target="_blank" rel="noreferrer">{signal.publisher}</a><p>{signal.uncertainty}</p></details><div className="button-row"><FeedbackButton runId={brief.run.id} signalId={signal.id} feedbackType="useful">Useful</FeedbackButton><FeedbackButton runId={brief.run.id} signalId={signal.id} feedbackType="not_useful">Not useful</FeedbackButton><FeedbackButton runId={brief.run.id} signalId={signal.id} feedbackType="wrong_relevance">Wrong angle</FeedbackButton></div></article>)}</section> : null)}
+      {groups.map(([title, signals]) => signals.length ? <section className="brief-group" key={title}><h3>{title}</h3>{signals.map((signal) => <article className="signal-card" key={signal.id}><p className="eyebrow">{signal.priority_tier} priority - {signal.verification_state}</p><h4>{signal.external_fact}</h4><p>{signal.red_hat_relevance_hypothesis ?? "No validation action recommended."}</p><p className="muted-text">Validate: {signal.validation_question ?? "No validation action recommended."}</p><details><summary>Evidence and uncertainty</summary><p>{signal.excerpt}</p><a href={signal.source_url} target="_blank" rel="noreferrer">{signal.publisher}</a><p>{signal.uncertainty}</p></details>{signal.feedback_types.length ? <p className="muted-text">Feedback saved: {signal.feedback_types.join(", ")}</p> : null}<div className="button-row"><FeedbackButton runId={brief.run.id} signalId={signal.id} feedbackType="useful" saved={signal.feedback_types.includes("useful")}>Useful</FeedbackButton><FeedbackButton runId={brief.run.id} signalId={signal.id} feedbackType="not_useful" saved={signal.feedback_types.includes("not_useful")}>Not useful</FeedbackButton><FeedbackButton runId={brief.run.id} signalId={signal.id} feedbackType="wrong_relevance" saved={signal.feedback_types.includes("wrong_relevance")}>Wrong angle</FeedbackButton></div></article>)}</section> : null)}
       {brief.unknowns_and_guardrails.length ? <section className="brief-group"><h3>Unknowns and guardrails</h3><ul className="detail-list">{brief.unknowns_and_guardrails.map((item) => <li key={item}>{item}</li>)}</ul></section> : null}
     </div>
   );
 }
 
-function FeedbackButton({ runId, signalId, feedbackType, children }: { runId: string; signalId: string; feedbackType: string; children: string }) {
-  const [saved, setSaved] = useState(false);
+function FeedbackButton({ runId, signalId, feedbackType, children, saved: initiallySaved = false }: { runId: string; signalId: string; feedbackType: string; children: string; saved?: boolean }) {
+  const [saved, setSaved] = useState(initiallySaved);
   return <button type="button" className="secondary-button" disabled={saved} onClick={() => intelligenceApi.feedback(runId, signalId, feedbackType).then(() => setSaved(true))}>{saved ? "Saved" : children}</button>;
 }

@@ -40,6 +40,7 @@ export interface IntelligenceSignal {
   uncertainty: string;
   verification_state: string;
   evidence_ids: string[];
+  feedback_types: string[];
 }
 
 export interface IntelligenceBrief {
