@@ -171,6 +171,7 @@ class SignalView(StrictModel):
     uncertainty: str
     verification_state: str
     evidence_ids: list[str]
+    feedback_types: list[str]
 
 
 class BriefView(StrictModel):

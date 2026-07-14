@@ -542,6 +542,14 @@ class IntelligenceStore:
             session.commit()
             return event
 
+    def list_feedback(self, signal_id: str) -> list[FeedbackEvent]:
+        with self._session() as session:
+            return session.scalars(
+                select(FeedbackEvent)
+                .where(FeedbackEvent.signal_id == signal_id)
+                .order_by(FeedbackEvent.created_at)
+            ).all()
+
     def record_outcome(
         self, run_id: str, signal_id: str | None, outcome_type: str, notes: str | None
     ) -> FeedbackEvent:

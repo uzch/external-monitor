@@ -307,6 +307,7 @@ def _signal_view(store: IntelligenceStore, signal_id: str) -> SignalView:
         uncertainty=signal.uncertainty,
         verification_state=verification.state,
         evidence_ids=[item[0].id for item in evidence_rows],
+        feedback_types=[event.event_type for event in store.list_feedback(signal.id)],
     )
 
 
