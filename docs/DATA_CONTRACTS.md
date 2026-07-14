@@ -66,6 +66,24 @@ Rejected signals remain visible as noise and should not be promoted into top val
 
 Feedback is append-only in the current MVP.
 
+### V2 Research Run Views
+
+The FastAPI research runtime persists autonomous runs independently from the v1 monitor.
+Run history is ordered newest first and exposes account context, focus, timeframe, state, timestamps, coverage limitations, and counts for `keep`, `watch`, `reject`, and `abstain` signals.
+
+The default seller brief contains only `keep` and `watch` signals.
+The evaluated-signal ledger retains all four dispositions in that order and keeps each signal connected to its claim, verification rationale, account-match basis, acquired evidence, canonical URL, dates, and discovery-query provenance.
+Discovery results and provider snippets are not evidence and cannot become seller-visible signals until acquisition, extraction, and evaluation complete.
+
+### Versioned Seller Feedback
+
+V2 seller feedback has exactly one current verdict per signal: `useful`, `not_useful`, or `unsure`.
+Reasons may include `wrong_relevance`, `incorrect_claim`, `weak_source`, `already_known`, and `wrong_entity`.
+`not_useful` requires an explanation.
+
+Replacing feedback creates an immutable timestamped revision and requires the caller's expected revision number. Concurrent or stale replacements fail rather than silently overwriting the current verdict.
+Legacy append-only feedback tags remain preserved. They are surfaced as unresolved legacy feedback until reviewed, rather than being silently collapsed into a current verdict.
+
 ### RedHatCapability
 
 `id`, `name`, `description`, `themes[]`, `sourceRef`, `active`

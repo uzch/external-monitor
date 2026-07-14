@@ -5,9 +5,8 @@ Revises: 0002_memory_embedding_dimension
 Create Date: 2026-07-14
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 revision = "0003_versioned_feedback"
 down_revision = "0002_memory_embedding_dimension"
