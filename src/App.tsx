@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 
 export default function App() {
   return (
@@ -15,6 +15,10 @@ export default function App() {
             <span>Local runtime</span>
             <span>No intent claims</span>
           </div>
+          <nav className="header-pills" aria-label="Product views">
+            <Link to="/">V1 monitor</Link>
+            <Link to="/research">Autonomous research</Link>
+          </nav>
         </div>
       </header>
       <main>

@@ -71,7 +71,7 @@ Those future capabilities should attach through replaceable adapters and review 
 - Structured-output compatibility is partial and model-specific. It is not yet reliable enough for autonomous research promotion.
 - Live public-web search with citations remains unresolved, so this is not yet an intelligent autonomous research product.
 - Frontend work is frozen except for wiring truthful backend states and outputs into the existing seller-facing views.
-- The next phase is an account-agnostic, backend-first autonomous intelligence runtime, likely using FastAPI once the live-search path is confirmed.
+- The account-agnostic FastAPI intelligence runtime is implemented with durable orchestration, evidence provenance, controlled retrieval, MaaS reasoning, vector memory, replay, and policy controls. A configured Brave key remains required for the first live autonomous discovery run.
 
 ## Quick Start
 
@@ -155,6 +155,7 @@ An ignored seed file can create local runtime accounts and source registrations.
 |---|---|
 | Product goal and user value | [`docs/PRODUCT.md`](docs/PRODUCT.md) |
 | Architecture and replaceable boundaries | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Run the autonomous intelligence runtime | [`docs/INTELLIGENCE_RUNTIME.md`](docs/INTELLIGENCE_RUNTIME.md) |
 | Data contracts and validation rules | [`docs/DATA_CONTRACTS.md`](docs/DATA_CONTRACTS.md) |
 | Source interpretation limits | [`docs/SOURCE_BOUNDARIES.md`](docs/SOURCE_BOUNDARIES.md) |
 | Runtime server and ingestion | [`server/`](server/) |

@@ -2,6 +2,16 @@
 
 Build a local tool that helps users answer: where to look, what changed, why it may matter through a Red Hat lens, and what to validate next.
 
+## Engineering mandate
+
+- Operate at the quality bar expected of a Distinguished Chief Architect or Distinguished Engineer in the CTO office of organizations such as Meta, OpenAI, Anthropic, Red Hat, or Google DeepMind.
+- Maximize the strength of signal, correctness, intelligence, and user outcome produced per unit of time, cost, and context. Minimize tokens and repetition, not rigor, capability, or ambition.
+- Do not constrain design, architecture, implementation, intelligence, or creative problem solving to the current codebase, current language, current abstractions, a minimal diff, or an incremental extension when a stronger solution requires redesign.
+- Treat existing modules and documentation as evidence of current state, not as architectural commitments. Preserve them only when they meet the required quality bar and product boundaries.
+- Make the strongest justified technical decision. Codex has authority to replace weak abstractions, reorganize boundaries, introduce better technologies, and redesign subsystems when doing so materially improves correctness, robustness, extensibility, security, observability, evaluation, maintainability, or product value.
+- Do not confuse the presence of a file, interface, probe, endpoint, or placeholder with a production-quality capability. Verify the full behavior, integration, failure handling, evidence, tests, and measurable outcome before describing a capability as implemented.
+- Read `docs/INTELLIGENCE_ARCHITECTURE_QUALITY.md` for architecture, retrieval, intelligence, learning, and capability-quality work.
+
 ## Rules
 
 - Never use em dash punctuation. Use plain hyphen instead.
@@ -26,6 +36,7 @@ Build a local tool that helps users answer: where to look, what changed, why it 
 - Product or UX: `docs/PRODUCT.md`
 - Data, schemas, fixtures: `docs/DATA_CONTRACTS.md`
 - Architecture, integrations, refactors: `docs/ARCHITECTURE.md`
+- Intelligence architecture, heterogeneous retrieval, learning systems, or capability-quality assessment: `docs/INTELLIGENCE_ARCHITECTURE_QUALITY.md`
 - Foundation v0: `docs/plans/FOUNDATION_V0.md`
 - Fixture edits: `fixtures/README.md`
 - Source interpretation: `docs/SOURCE_BOUNDARIES.md`
