@@ -40,7 +40,7 @@ Do not hard-code NAPS labels.
 
 `id`, `accountId`, `state`, `importSource`, `executiveSummary`, `sourcePlan`, `sourcesChecked[]`, `sourceGaps[]`, `searchQueriesUsed[]`, `coverageLimitations[]`, `unknownsAndGuardrails[]`, `createdAt`, `updatedAt`, `importedAt`
 
-`state`: `imported` for legacy stored imports. The autonomous-run state contract is added only when a live search provider is confirmed.
+`state`: `queued | planning | discovering | acquiring | analyzing | synthesizing | completed | partial | abstained | blocked | failed | cancelled`.
 
 `importSource`: `gpt_assisted | manual`.
 
@@ -60,11 +60,13 @@ Rejected signals remain visible as noise and should not be promoted into top val
 
 ### AccountTeamFeedback
 
-`id`, `researchSignalId`, `feedbackType`, `notes?`, `createdAt`
+`id`, `researchSignalId`, `revision`, `verdict`, `reasons[]`, `explanation?`, `createdAt`, `isCurrent`
 
-`feedbackType`: `useful | not_useful | wrong_angle | already_known | needs_better_source | follow_up_later`.
+`verdict`: `useful | not_useful | unsure`.
 
-Feedback is append-only in the current MVP.
+`reasons`: `wrong_relevance | incorrect_claim | weak_source | already_known | wrong_entity`.
+
+`not_useful` requires an explanation. Replacements create immutable revisions and only the latest valid revision is current. Feedback is collected for evaluation and does not automatically retrain or modify the system.
 
 ### V2 Research Run Views
 

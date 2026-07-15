@@ -1,7 +1,7 @@
 # Repository Contents
 
-This repository contains a local-first connected monitor for public account signals.
-It includes the React UI, local Node HTTP server, SQLite persistence, RSS/Atom retrieval, source-safety checks, evaluator boundaries, tests, and durable product documentation.
+This repository contains a local-first external account signal product.
+It includes the React seller workspace, Node V1 compatibility monitor, FastAPI V2 intelligence runtime, PostgreSQL and Temporal orchestration, heterogeneous discovery and retrieval boundaries, tests, and durable product documentation.
 
 It intentionally does not contain raw source workbooks, customer data, credentials, private account material, or internal Red Hat data.
 
@@ -25,7 +25,9 @@ It intentionally does not contain raw source workbooks, customer data, credentia
 | `src/App.tsx` | Application shell and page outlet. |
 | `src/ui/PortfolioPage.tsx` | Runtime setup, account ranking table, monitor run history. |
 | `src/ui/AccountDetailPage.tsx` | Account detail, source controls, evidence and evaluation sections. |
+| `src/ui/AutonomousResearchPage.tsx` | V2 research intake, brief, signal ledger, audit, and feedback workflow. |
 | `src/services/connectedApi.ts` | Browser client for the local connected API. |
+| `src/services/intelligenceApi.ts` | Browser client for the FastAPI intelligence API. |
 | `src/styles.css` | Shared visual system and responsive layout rules. |
 
 ## Runtime Surface
@@ -40,6 +42,8 @@ It intentionally does not contain raw source workbooks, customer data, credentia
 | `server/sourceSafety.ts` | Public-source URL and response safety checks. |
 | `server/evaluator.ts` | Optional semantic evaluator adapter and output validation. |
 | `server/sqliteRepositories.ts` | Local SQLite persistence. |
+| `intelligence/src/connected_monitor_intelligence/` | FastAPI contracts, orchestration, providers, retrieval, persistence, and runtime APIs. |
+| `intelligence/migrations/` | Versioned PostgreSQL migrations for the V2 runtime. |
 
 ## Tests
 
@@ -57,7 +61,7 @@ It intentionally does not contain raw source workbooks, customer data, credentia
 | `.github/PULL_REQUEST_TEMPLATE.md` | Review checklist for evidence-bound changes. |
 | `.github/ISSUE_TEMPLATE/ux-gap.yml` | Report confusing app, repo, or docs navigation. |
 | `.github/ISSUE_TEMPLATE/source-boundary.yml` | Report overclaim or source-boundary concerns. |
-| `docs/assets/` | GitHub-rendered SVG diagrams used by the README. |
+| `docs/assets/` | Controlled screenshots of the current research workspace and supporting documentation visuals. |
 | `.agents/skills/repo-experience-design/SKILL.md` | Repeatable repo-experience review loop. |
 
 ## Local Artifacts

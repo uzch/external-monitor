@@ -1,185 +1,153 @@
 <p align="center">
   <img src="hero-image.png" alt="External Monitor hero image showing evidence moving from noisy public signals into filtering, prioritization, and drill-down review" width="100%">
   <br>
-  <sub>Hero depicts the product direction. Connected Monitor v1 currently supports registered public sources, bounded evidence capture, optional evaluation, ranking, and drill-down review.</sub>
+  <sub>The hero depicts the product direction. Connected Monitor v1 remains the evidence and ingestion foundation; the current workspace adds an account-agnostic research path above it.</sub>
 </p>
 
 # External Account Signal Monitor
 
 [![CI](https://github.com/uzch/external-monitor/actions/workflows/check.yml/badge.svg)](https://github.com/uzch/external-monitor/actions/workflows/check.yml)
-![Status](https://img.shields.io/badge/status-connected%20monitor%20v1-red)
+![Current surface](https://img.shields.io/badge/current%20surface-V2%20research%20workspace-blue)
 ![Data boundary](https://img.shields.io/badge/data-public%20sources%20only-blue)
 ![Runtime](https://img.shields.io/badge/runtime-local%20first-green)
 
-External Account Signal Monitor is a local-first tool for account teams who need to answer four questions quickly.
+External Account Signal Monitor helps account teams answer:
 
 1. Where should I look?
-2. What changed?
-3. Why might it matter through a Red Hat lens?
-4. What should I validate next?
+2. What changed externally?
+3. Why might it matter through a bounded Red Hat lens?
+4. What should the account team validate next?
 
-It stores bounded public-source evidence locally and is being evolved into an autonomous research workflow that produces account-team signal briefs.
-RSS/Atom monitoring and legacy imports remain ingestion substrate, not the seller workflow.
-It does not claim full external-world coverage, customer intent, opportunity, fit, demand, renewal, deployment, ownership, or complete account coverage.
+The repository contains two connected product surfaces:
+
+- **Connected Monitor v1** is the local source-monitoring and evidence foundation.
+- **The current V2 research workspace** accepts an account and focus, runs the FastAPI intelligence path, and presents an evidence-backed Account Signal Brief with a complete evaluated-signal ledger.
+
+The product is account-agnostic. It does not claim customer intent, opportunity, fit, demand, renewal, deployment, ownership, or complete external-world coverage.
+
+## Current Product Surface
+
+| Surface | What it does now | Entry point |
+|---|---|---|
+| V1 monitor | Registers public RSS/Atom sources, retrieves bounded candidates, persists evidence, and supports local review. | `http://127.0.0.1:8787/` |
+| V2 research workspace | Starts or reopens account research, shows the brief, exposes all dispositions, preserves provenance, and captures versioned feedback. | `http://127.0.0.1:8787/research` |
+| FastAPI intelligence runtime | Owns V2 orchestration, persistence, provider selection, acquisition, evidence decisions, and brief APIs. | `http://127.0.0.1:8000` |
+
+The current local capability state is truthful and inspectable at `http://127.0.0.1:8000/v2/capabilities`:
+
+- Red Hat MaaS reasoning is available.
+- Tavily direct API search and extract are available when local credentials are configured.
+- Tavily MCP search and extract are available when the local MCP connection is configured.
+- Brave Web and News Search are implemented but unavailable in the current local configuration.
+- HTML, PDF, and browser acquisition paths are available.
+
+## See The Current Workflow
+
+The screenshots below are captured from the running application. The README hero above is a protected product asset and is not generated from the UI.
 
 <p align="center">
-  <img src="docs/assets/connected-monitor-overview.svg" alt="Connected Monitor v1 overview" width="920">
+  <img src="docs/assets/research-intake.png" alt="Current autonomous research intake screen with account, focus, aliases, timeframe, and start research controls" width="920">
 </p>
 
-## Why It Exists
+<p align="center">
+  <img src="docs/assets/account-signal-brief.png" alt="Current Account Signal Brief showing an executive summary, uncertainty, and evaluated findings" width="920">
+</p>
 
-Account teams do not need another noisy feed.
-They need a small number of evidence-backed reasons to inspect an account and a clear next validation step.
+## How The Intelligence Path Works
 
-This project turns public external signals into a reviewable local workflow.
-It is designed so source retrieval, evaluation, ranking, storage, and UI delivery can each be replaced without weakening the evidence boundary.
+```text
+account context
+  -> FastAPI research run
+  -> MaaS planning and query strategy
+  -> Tavily or Brave discovery
+  -> controlled HTML, PDF, or browser acquisition
+  -> normalized evidence and citations
+  -> entity matching and claim decisions
+  -> verification, ranking, keep/watch/reject/abstain
+  -> bounded relevance hypothesis and validation question
+  -> Account Signal Brief and complete ledger
+  -> append-only account-team feedback
+```
 
-## What V1 Does
-
-| Capability | Current behavior | Guardrail |
-|---|---|---|
-| Account setup | Add local monitored accounts and aliases. | Mapping confidence stays explicit. |
-| MaaS probe | Validate a configured Red Hat Demo Platform model for structured planning, extraction, evaluation, and verification. | The probe is executable and does not claim live research is ready. |
-| Retrieval probe | Safely retrieve and normalize public HTML and PDFs. | Public URLs are validated and private network targets are rejected. |
-| Live research | Pending an approved public-web search capability with citations. | No JSON, RSS-only, or externally prepared substitute is presented as autonomous research. |
-| Signal brief | Render top signals, watch items, rejected noise, evidence, validation questions, and feedback. | Rejected noise is visible but not promoted as a validation target. |
-| Source setup | Register public RSS/Atom sources per account as an ingestion substrate. | URLs are validated and private network targets are rejected. |
-| Retrieval | Run bounded local monitor jobs when registered feeds are useful. | Candidates remain evidence records until evaluated. |
-| Evaluation | Optional configured HTTP evaluator can produce semantic records. | No evaluator means no Red Hat relevance or priority claim. |
-| Ranking | Account summaries rank only evaluated evidence-backed records. | Unevaluated candidates do not become intent signals. |
-| Review | Account detail leads with the Account Signal Brief and keeps monitor records under debug/admin context. | External events are never treated as proof of customer plans. |
+Discovery results are leads, not evidence. Provider snippets and tool results cannot become seller-visible facts until the system acquires the source, extracts bounded evidence, preserves provenance, and validates the claim.
 
 ## Why V1 Matters
 
-Connected Monitor v1 is the evidence and ingestion foundation.
-It is valuable because it creates the durable boundary layer: source registration, bounded retrieval, local persistence, optional evaluation, account ranking, and reviewable evidence records.
+Connected Monitor v1 is the durable evidence and ingestion foundation. It provides source registration, public-source safety checks, bounded retrieval, local persistence, optional evaluation, ranking, and reviewable evidence records.
 
-That foundation is what lets later discovery, feedback, and prioritization work stay evidence-bound instead of becoming another noisy or overclaiming feed.
+That foundation keeps the current research path evidence-bound while allowing discovery, retrieval, verification, and future learning mechanisms to evolve independently.
 
-## What V1 Does Not Do Yet
+## What V2 Adds
 
-Connected Monitor v1 is not the final product vision.
-It does not yet perform intelligent public-source discovery, feedback learning, agentic prioritization, Salesforce delivery, Slack delivery, email delivery, automatic outreach, opportunity creation, forecasting, or intent detection.
+The current V2 workspace adds a real account-team path on top of the foundation:
 
-Those future capabilities should attach through replaceable adapters and review workflows without weakening the separation between external fact, source evidence, Red Hat relevance hypothesis, and validation action.
+- Research runs persist and reopen after refresh or restart.
+- The default brief leads with keep and watch signals.
+- The complete ledger retains keep, watch, reject, and abstain candidates.
+- Every signal preserves fact, evidence, source, dates, verification, uncertainty, rationale, and query/provider provenance.
+- Feedback has one current verdict with immutable revision history.
+- FastAPI, PostgreSQL, Temporal, MinIO, MaaS, Tavily, Brave, and controlled retrieval are separate capability boundaries.
 
-## Current Iteration Status
+## Known Limitations
 
-- Real Red Hat MaaS connectivity is working through the configured local endpoint and API key.
-- Four authorized MaaS models have measured benchmark results in [docs/MAAS_MODELS.md](docs/MAAS_MODELS.md).
-- Safe public HTML and PDF retrieval is implemented and probeable locally.
-- Structured-output compatibility is partial and model-specific. It is not yet reliable enough for autonomous research promotion.
-- Live public-web search with citations remains unresolved, so this is not yet an intelligent autonomous research product.
-- Frontend work is frozen except for wiring truthful backend states and outputs into the existing seller-facing views.
-- The account-agnostic FastAPI intelligence runtime is implemented with durable orchestration, evidence provenance, controlled retrieval, MaaS reasoning, vector memory, replay, and policy controls. A configured Brave key remains required for the first live autonomous discovery run.
+- Provider readiness depends on local configuration and credentials. No secret values belong in GitHub or documentation.
+- Brave is implemented but is not available in the current local capability report.
+- The runtime is a local single-user implementation, not a deployed enterprise service.
+- Advanced learning and policy promotion mechanisms are recorded and controlled, but they do not automatically retrain the system from seller feedback.
+- V1 and V2 use separate persistence boundaries while the migration remains in progress.
+- The product does not yet provide Salesforce, Slack, email, scheduling, portfolio prioritization, or complete public-web coverage.
 
-## Quick Start
+## Run Locally
 
-```bash
+### V1 and the shared frontend
+
+```powershell
 npm install
 npm run build
 npm start
 ```
 
-Open `http://127.0.0.1:8787`.
+Open `http://127.0.0.1:8787/` for V1 or `http://127.0.0.1:8787/research` for V2.
 
-Local runtime data is stored in `local-data/connected-monitor.sqlite` by default.
-`local-data/` is ignored by Git.
+### V2 intelligence runtime
 
-## First Walkthrough
+Install the pinned Python environment once, then add local values only to the ignored `.env` file:
 
-1. Add an account.
-2. Add one or more aliases that appear in public source text.
-3. Open the account detail page.
-4. Review research readiness on the account page.
-5. Configure and run the MaaS probe with `npm run probe:maas`.
-6. Run a public retrieval probe with `npm run probe:retrieval -- <public-url> ...`.
-7. Enable live autonomous research only after an approved public-web search capability is configured.
-
-If no evaluator is configured, candidates stay in the awaiting evaluation section.
-That is expected and intentional.
-
-## Signal Lifecycle
-
-<p align="center">
-  <img src="docs/assets/signal-lifecycle.svg" alt="Signal lifecycle from source to validation action" width="920">
-</p>
-
-## Configuration
-
-Copy `.env.example` when you want local overrides.
-
-See [MaaS model evaluation](docs/MAAS_MODELS.md) for non-secret model configuration, methodology, and measured benchmark results.
-
-```text
-CM_PORT=8787
-CM_DATABASE_PATH=local-data/connected-monitor.sqlite
-CM_SEED_CONFIG_PATH=local-data/seed.json
-CM_SOURCE_MIN_INTERVAL_MINUTES=30
-CM_SOURCE_TIMEOUT_MS=8000
-CM_SOURCE_MAX_ENTRIES=25
-CM_SOURCE_MAX_RESPONSE_BYTES=1000000
-CM_EVALUATOR_BASE_URL=
-CM_EVALUATOR_API_KEY=
-CM_EVALUATOR_MODEL=
-CM_EVALUATOR_TIMEOUT_MS=15000
-CM_MAAS_BASE_URL=
-CM_MAAS_API_KEY=
-CM_MAAS_MODEL=
-CM_MAAS_TIMEOUT_MS=30000
+```powershell
+winget install --id astral-sh.uv --exact
+uv python install 3.12
+uv --directory intelligence sync --all-groups
+docker compose -f compose.intelligence.yml up -d --build
 ```
 
-An ignored seed file can create local runtime accounts and source registrations.
+Required secret names and provider setup are documented in [docs/INTELLIGENCE_RUNTIME.md](docs/INTELLIGENCE_RUNTIME.md) and [.env.example](.env.example). Never document or commit their values.
 
-```json
-{
-  "accounts": [
-    {
-      "name": "Example Corp",
-      "aliases": ["Example"],
-      "sector": "Financial services",
-      "sources": [
-        {
-          "displayName": "Example public feed",
-          "url": "https://example.com/feed.xml"
-        }
-      ]
-    }
-  ]
-}
+## Validate
+
+```powershell
+npm run check
+uv --directory intelligence run ruff check .
+uv --directory intelligence run pytest
 ```
+
+The canonical frontend check builds the app, runs TypeScript and unit validation, and runs the browser checks with isolated test data. The Python commands validate the FastAPI runtime separately.
 
 ## Repository Map
 
-| If you want to understand... | Start here |
+| Need | Start here |
 |---|---|
-| Product goal and user value | [`docs/PRODUCT.md`](docs/PRODUCT.md) |
-| Architecture and replaceable boundaries | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| Run the autonomous intelligence runtime | [`docs/INTELLIGENCE_RUNTIME.md`](docs/INTELLIGENCE_RUNTIME.md) |
-| Data contracts and validation rules | [`docs/DATA_CONTRACTS.md`](docs/DATA_CONTRACTS.md) |
+| Product promise and current scope | [`docs/PRODUCT.md`](docs/PRODUCT.md) |
+| Runtime topology and migration boundary | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Start, inspect, and validate V2 | [`docs/INTELLIGENCE_RUNTIME.md`](docs/INTELLIGENCE_RUNTIME.md) |
+| Intelligence quality bar | [`docs/INTELLIGENCE_ARCHITECTURE_QUALITY.md`](docs/INTELLIGENCE_ARCHITECTURE_QUALITY.md) |
+| Data contracts | [`docs/DATA_CONTRACTS.md`](docs/DATA_CONTRACTS.md) |
 | Source interpretation limits | [`docs/SOURCE_BOUNDARIES.md`](docs/SOURCE_BOUNDARIES.md) |
-| Runtime server and ingestion | [`server/`](server/) |
-| Connected UI and API client | [`src/ui/`](src/ui/) and [`src/services/connectedApi.ts`](src/services/connectedApi.ts) |
-| E2E behavior | [`tests/e2e/`](tests/e2e/) |
-| Synthetic foundation fixtures | [`fixtures/README.md`](fixtures/README.md) |
-| Known follow-ups and future direction | [`docs/PRODUCT.md`](docs/PRODUCT.md) |
-| Repo experience review loop | [`.agents/skills/repo-experience-design/SKILL.md`](.agents/skills/repo-experience-design/SKILL.md) |
+| Node V1 server and ingestion | [`server/`](server/) |
+| FastAPI runtime | [`intelligence/`](intelligence/) |
+| Seller workspace | [`src/ui/AutonomousResearchPage.tsx`](src/ui/AutonomousResearchPage.tsx) |
+| Current UI snapshots | [`docs/assets/`](docs/assets/) |
+| Repeatable repo-experience review | [`.agents/skills/repo-experience-design/SKILL.md`](.agents/skills/repo-experience-design/SKILL.md) |
 
-## Checks
+## Product Direction
 
-```bash
-npm run build
-npm run test
-npm run test:e2e
-npm run check
-```
-
-The E2E check uses an isolated temporary SQLite database and the local API server.
-
-## Project Direction
-
-Connected Monitor v1 is the ingestion and evidence foundation.
-Manual account and source registration is a bootstrap path, not the intended final seller workflow.
-
-The next product direction is intelligent public-source discovery, feedback learning, and agentic prioritization.
-Those capabilities should attach through replaceable adapters and review workflows while preserving the separation between external fact, source evidence, Red Hat relevance hypothesis, and validation action.
+V1 remains the compatibility and evidence foundation. V2 is the current account-agnostic research workspace and runtime direction. The long-term product is an autonomous external-intelligence system that discovers where to look, verifies evidence, reasons through bounded relevance, learns through measured evaluation, and stays honest about uncertainty.
