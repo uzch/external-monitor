@@ -28,19 +28,19 @@ Codex is not limited to the current implementation language, runtime topology, p
 
 ## Current repository assessment
 
-This is a point-in-time assessment of the repository represented by the attached `external-monitor-v2-p1` archive. Presence means code or a contract exists. Maturity describes what the repository actually proves.
+This is the current assessment of the repository. Presence means code or a contract exists. Maturity describes what the repository actually proves in the integrated V2 runtime, not what a filename or interface suggests.
 
 | Capability | Current location | Proven presence | Quality and maturity finding |
 |---|---|---|---|
-| Live search | `server/liveSearch.ts`, runtime wiring in `server/httpServer.ts` | A provider interface and an unconfigured implementation expose truthful unavailable state. | Placeholder only. There is no search adapter, query execution, pagination, citation contract, quota handling, retrieval telemetry, search-quality evaluation, or production integration. |
-| Public retrieval | `server/publicRetrieval.ts`, `server/probes/retrievalProbe.ts` | Bounded public URL fetching, basic HTML extraction, PDF extraction, excerpts, and fingerprints. | Prototype utility and diagnostic probe. It is not a generalized acquisition and extraction subsystem and is not integrated into account research, evidence persistence, verification, or signal production. |
+| Live discovery | `intelligence/src/connected_monitor_intelligence/providers/` | Tavily direct API, Tavily MCP, and Brave Web and News connectors preserve raw results, query provenance, rank, timestamps, provider path, and readiness. | Integrated capability boundary. Availability remains provider- and configuration-dependent, and Brave is currently unavailable in the local capability report. |
+| Public acquisition | `intelligence/src/connected_monitor_intelligence/retrieval/` | Controlled HTML, PDF, and browser acquisition feeds normalized evidence and citation decisions. | Integrated first retrieval paths. Difficult sites, broad source coverage, and production-scale caching remain limited. |
 | RSS and Atom | `server/rssAtomConnector.ts`, `server/monitorRunner.ts` | A working registered-feed path retrieves entries, performs bounded matching and deduplication, optionally evaluates them, persists records, and exposes them through the UI. | Legitimate v1 ingestion substrate, but too rigid to serve as the general retrieval architecture. It must not become the center of a source-type conditional tree. |
 | Source safety | `server/sourceSafety.ts` | Public URL validation, DNS and private-address checks, redirect checks, timeout controls, and response limits. | Useful foundation. It remains one layer of a larger fetch-security, content-safety, credentials, policy, isolation, and abuse-resistance architecture. |
 | Semantic evaluation | `server/evaluator.ts` | Optional model evaluation for RSS candidates with structured output validation. | Integrated but narrow. It evaluates individual feed candidates and is not a complete research, verification, synthesis, calibration, or learning runtime. |
-| MaaS reasoning | `server/maasReasoning.ts`, `server/probes/maasProbe.ts`, `server/probes/maasBenchmark.ts` | Executable planning, extraction, evaluation, and verification probes against configured models. | Model compatibility and qualification experiment. It is not production orchestration and does not discover, retrieve, revise, corroborate, trace, or learn in the account workflow. |
+| MaaS reasoning | `intelligence/src/connected_monitor_intelligence/maas.py`, provider instrumentation, and runtime stages | The FastAPI runtime invokes configured MaaS models for planning, extraction, evaluation, verification assistance, relevance, ranking, reflection, and synthesis. | Integrated reasoning capability with model-specific structured-output limits and provider telemetry. It is not an autonomous guarantee or a replacement for application-level validation. |
 | Capability taxonomy | `server/capabilityTaxonomy.ts` | A small static capability set exists for experimentation. | Temporary hard-coded taxonomy, not an authoritative, extensible knowledge or policy system. |
-| Research workflow | `src/domain/researchContracts.ts`, research persistence in `server/sqliteRepositories.ts` | Manual and GPT-assisted research packages can be imported and rendered. | Import workflow only. The system does not autonomously plan, search, acquire, extract, resolve, cluster, verify, rank, synthesize, or revise research. |
-| Feedback | `AccountTeamFeedback` contracts and persistence | A small append-only label set and notes can be stored. | Feedback capture only. There is no decision trace, durable training record, replay dataset, offline evaluation, policy comparison, promotion gate, rollback, drift detection, or measurable learning. |
+| Research workflow | FastAPI run models, Temporal activities, PostgreSQL persistence, and `src/ui/AutonomousResearchPage.tsx` | Persisted runs connect planning, discovery, acquisition, evidence, claim decisions, verification, ranking, synthesis, ledger audit, and feedback. | Real vertical slice. The runtime is local and single-user, and advanced multi-account learning and production governance remain future work. |
+| Feedback | Versioned feedback contracts, migration, API, and workspace UI | One current verdict per signal, immutable revisions, negative-feedback explanation rules, and visible history. | Evaluation substrate, not automatic learning. Replay, candidate policy evaluation, promotion, rollback, and drift records exist as controlled foundations but do not automatically retrain the system. |
 
 ## Material quality findings
 
@@ -60,12 +60,12 @@ Do not describe a capability as implemented merely because the repository contai
 
 A capability is implemented only when the end-to-end behavior, integration, evidence, failure handling, observability, security, evaluation, and tests are present at the level required by its intended use.
 
-### `liveSearch.ts` is an extension point, not live search
+### Provider availability is runtime state
 
-The current code truthfully reports that search is unavailable. That honesty should be preserved, but the module does not yet provide:
+Discovery availability must remain truthful and provider-specific. A configured capability may be available in one environment and blocked in another. The runtime preserves:
 
-- query planning or execution;
-- search-provider adapters;
+- query planning and provider execution;
+- separate search-provider adapters;
 - result pagination and continuation;
 - citation-preserving results;
 - provider quotas and retry policy;
@@ -73,11 +73,11 @@ The current code truthfully reports that search is unavailable. That honesty sho
 - entity-aware query expansion;
 - telemetry and cost attribution;
 - search recall, precision, or coverage evaluation;
-- production orchestration.
+- durable production-style orchestration for the local V2 slice.
 
-### `publicRetrieval.ts` is a bounded experiment, not a retrieval platform
+### Acquisition is integrated but bounded
 
-The current utility is useful for proving safe access to public HTML and PDF resources. It does not yet provide the broader system required for heterogeneous acquisition and evidence extraction, including:
+The current runtime proves safe access and evidence flow for HTML, PDF, and browser paths. It does not yet provide every production retrieval feature, including:
 
 - browser-rendered pages;
 - content-handler and extractor registries;
@@ -89,7 +89,7 @@ The current utility is useful for proving safe access to public HTML and PDF res
 - authentication and source-specific access policy;
 - extraction-quality scoring;
 - durable raw-artifact storage;
-- integration with claims, provenance, verification, and decision traces.
+- broad source coverage, caching, and production-scale revisit policy.
 
 ### RSS and Atom are one retrieval family
 
@@ -103,9 +103,9 @@ Do not scale the system by:
 - representing every acquired item as a feed entry;
 - treating source registration as the final seller workflow.
 
-### MaaS probes are qualification infrastructure
+### MaaS probes support the runtime
 
-The current probes are useful for measuring provider compatibility, structured-output reliability, latency, token use, and model failure modes. They do not prove an autonomous account-intelligence system.
+The probes remain useful for measuring provider compatibility, structured-output reliability, latency, token use, and model failure modes. The production runtime now invokes MaaS directly, but probes and model calls still do not by themselves prove an autonomous account-intelligence system.
 
 The production runtime still requires:
 

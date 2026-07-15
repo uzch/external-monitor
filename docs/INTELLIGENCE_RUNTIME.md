@@ -1,14 +1,20 @@
-# Intelligence Runtime
+# V2 Intelligence Runtime
 
-The v2 intelligence runtime is the authoritative FastAPI path for autonomous account research. It is separate from the Node v1 monitor while migration is in progress. The runtimes do not share a writable database.
+The V2 runtime is the authoritative FastAPI path for account-agnostic external research. It runs alongside the Node V1 monitor while migration is in progress. The runtimes do not share a writable intelligence database.
 
-## Runtime Path
+## Runtime path
 
-`account context -> MaaS plan -> policy-selected discovery -> controlled acquisition -> normalized evidence -> entity and event decisions -> verification -> bounded relevance -> brief -> feedback -> replay and policy evaluation`
+```text
+account context -> MaaS plan -> provider discovery -> controlled acquisition
+-> normalized evidence -> entity and claim decisions -> verification
+-> bounded relevance -> Account Signal Brief -> feedback and replay records
+```
 
-Tavily direct API, Tavily MCP, and Brave are separate provider paths with independent readiness, provider operation names, raw artifacts, latency records, and downstream learning records. Tavily direct API is preferred when configured, then Tavily MCP, then Brave. Provider snippets and tool results are not evidence. Only normalized acquired content can support a claim, citation, verification, or seller-visible signal.
+Tavily direct API, Tavily MCP, and Brave are separate provider paths with independent readiness, operation names, raw artifacts, latency records, and downstream yield metrics. The selection policy prefers Tavily direct API, then Tavily MCP, then Brave when each capability is available.
 
-## Local Start
+Provider snippets and tool results are not evidence. Only normalized acquired content can support a claim, citation, verification decision, or seller-visible signal.
+
+## Local setup
 
 Install the pinned runtime once:
 
@@ -18,23 +24,53 @@ uv python install 3.12
 uv --directory intelligence sync --all-groups
 ```
 
-Add local values only to ignored `.env`. Required MaaS names are `CM_MAAS_BASE_URL`, `CM_MAAS_API_KEY`, and `CM_MAAS_MODEL`. Discovery can use `CM_TAVILY_API_KEY`, `CM_TAVILY_MCP_URL`, `CM_TAVILY_MCP_TOKEN`, or `CM_BRAVE_SEARCH_API_KEY`. Do not commit API keys, bearer tokens, or authenticated MCP endpoint values. See `.env.example` for variable names and local infrastructure defaults.
+Put local values only in the ignored `.env`. Required variable names are documented in `.env.example`:
 
-Start the platform:
+- `CM_MAAS_BASE_URL`
+- `CM_MAAS_API_KEY`
+- `CM_MAAS_MODEL`
+- `CM_TAVILY_API_KEY`
+- `CM_TAVILY_MCP_URL`
+- `CM_TAVILY_MCP_TOKEN`
+- `CM_BRAVE_SEARCH_API_KEY`
+
+Never commit or document secret values, bearer tokens, or authenticated MCP URLs.
+
+Start the runtime and supporting services:
 
 ```powershell
 docker compose -f compose.intelligence.yml up -d --build
 ```
 
-The FastAPI health endpoint is `http://127.0.0.1:8000/health`. A research run cannot start unless MaaS and at least one live discovery provider are configured. This fail-closed state is deliberate.
+The API health endpoint is `http://127.0.0.1:8000/health`. Capability readiness is available at `http://127.0.0.1:8000/v2/capabilities`.
 
-## Persistence and Learning
+Start the shared frontend separately:
 
-PostgreSQL stores run state, task outputs, discovery records, evidence, claims, decisions, feedback, outcomes, policy versions, and replay manifests. MinIO stores immutable raw provider, source, MaaS request, and MaaS response artifacts. Temporal owns durable asynchronous execution and bounded replanning.
+```powershell
+npm run build
+npm start
+```
 
-The runtime uses a pinned local BGE embedding model for 384-dimensional vector memory. PostgreSQL graph edges represent account-to-event relationships with evidence provenance. Memory retrieval is account-scoped, salience-aware, and provenance-backed.
+Open `http://127.0.0.1:8787/research` for the V2 research workspace. V1 remains at `http://127.0.0.1:8787/`.
 
-Feedback and outcomes create append-only learning records. Candidate policies require replay evaluation before promotion. Promotion is versioned and rollback restores the recorded predecessor. Advanced learning methods remain inactive until sufficient evaluated data exists.
+## Persistence and observability
+
+PostgreSQL stores runs, stage outputs, discovery records, evidence, claims, decisions, feedback, outcomes, policy versions, and replay manifests. MinIO stores immutable raw provider, source, MaaS request, and MaaS response artifacts. Temporal owns durable asynchronous execution and bounded continuation.
+
+The runtime records provider, model, prompt and schema version, request and response references, tool calls, token usage where available, latency, cost where available, validation results, failures, retries, and downstream decision impact.
+
+The local runtime uses pgvector-backed embeddings for provenance-aware memory. Advanced learning policies remain inactive until replay evaluation has sufficient data. Feedback is collected for evaluation and does not automatically retrain or modify the system.
+
+## Current capability state
+
+The implementation currently supports:
+
+- real MaaS reasoning calls;
+- Tavily direct API search and extract when configured;
+- Tavily MCP search and extract, with crawl and map declared where available;
+- Brave Web and News Search connectors, currently unavailable when the local Brave key is absent;
+- controlled HTML, PDF, and browser acquisition;
+- persisted evidence-to-brief output with complete signal audit and feedback history.
 
 ## Validation
 
@@ -44,4 +80,4 @@ uv --directory intelligence run pytest
 npm run check
 ```
 
-Live acceptance should use the direct Tavily API first when `CM_TAVILY_API_KEY` is configured. If Tavily direct API is unavailable, the runtime can fall back to Tavily MCP or Brave while preserving provider provenance and yield metrics.
+Use the direct Tavily API first for live acceptance when configured. If it is unavailable, the runtime can fall back to Tavily MCP or Brave while preserving provider provenance and downstream yield metrics. Do not use imported JSON or RSS-only input as a substitute for autonomous research.

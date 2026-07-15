@@ -1,99 +1,97 @@
 # Architecture
 
 ## Design rule
-Core product behavior depends on domain contracts and provider interfaces, never on a spreadsheet, API, model, CRM, or delivery surface.
 
-## Domain flow
+Core product behavior depends on domain contracts and capability boundaries, not on one provider, model, storage engine, or delivery surface.
 
-`providers -> validation -> event/evidence records -> relevance evaluation -> prioritization -> portfolio/account application services -> UI`
+## Runtime topology
 
-## Required modules
-
-| Module | Foundation v0 | Replaceable future path |
-|---|---|---|
-| hierarchy provider | local hierarchy fixtures | territory or CRM source |
-| account + assignment provider | local account/mapping fixtures | authoritative account source |
-| event provider | local normalized events | search, news, RSS, procurement, API connector |
-| capability provider | local Red Hat capability taxonomy | approved taxonomy/knowledge source |
-| relevance evaluator | deterministic fixture result or rules | model, RAG, MCP, internal-context enrichment |
-| prioritization service | deterministic ranking | configurable scoring/feedback service |
-| portfolio service | scope/filter/aggregate mapped accounts | same service with authoritative data |
-| presentation adapter | local web UI | Salesforce, Slack, email, other surfaces |
-| audit service | retain validation/evaluation metadata | human-review and override workflow |
-
-## Boundary rules
-- UI does not read fixture files directly.
-- Event providers do not decide relevance.
-- Relevance evaluators do not fetch external data.
-- Delivery does not alter evidence or ranking.
-- Public evidence, internal context, generated interpretation, and seller action remain distinct records.
-- Unknown data remains unknown; no inferred ownership or missing-data fabrication.
-
-## Connected Monitor v1 implementation
-Connected Monitor v1 adds a local Node HTTP server, local SQLite repositories, runtime account and source registration APIs, a bounded RSS/Atom connector, source-safety checks, optional evaluator configuration, and ranking snapshots over evaluated evidence-backed records.
-Manual registration is an administrative bootstrap path for local operation and testing, not the intended long-term discovery experience.
-Future intelligent discovery, feedback learning, and agentic prioritization should be implemented through replaceable adapters and review workflows rather than coupling the UI directly to retrieval, model, or storage details.
-
-## Current capability-proving iteration
-
-Implemented in this validated checkpoint:
-
-- Real Red Hat Demo Platform MaaS connectivity through a configured OpenAI-compatible Chat Completions endpoint.
-- Reusable MaaS probes for planning, extraction, evaluation, and verification.
-- Measured four-model benchmark coverage recorded in [MAAS_MODELS.md](MAAS_MODELS.md).
-- Safe application-controlled public HTML and PDF retrieval with local probes.
-- Truthful UI and API capability states that expose the missing live-search dependency instead of pretending autonomous research exists.
-
-Still absent or blocked:
-
-- Approved live public-web search with citations.
-- Real account-input to autonomous-brief orchestration.
-- Autonomous entity resolution, event clustering, verification loops, and seller-grade brief generation.
-- A backend-first autonomous runtime. The likely next implementation path is FastAPI, but that migration has not started in this checkpoint.
-
-Structured-output limits:
-
-- Structured-output compatibility is model-specific and not yet repeatable enough to treat MaaS as autonomous-runtime-ready.
-- `gpt-oss-120b` succeeded in an isolated full probe but was not stable across the sequential benchmark.
-- `llama-scout-17b` and `gpt-oss-20b` showed partial promise with schema and rate-limit failures.
-- `deepseek-r1-distill-qwen-14b` did not satisfy the required structured-output contract in the measured run.
-
-Frontend status:
-
-- Seller-facing UI work is frozen except for wiring real backend states and outputs.
-- Do not start a broader UI redesign, portfolio shell rebuild, or seller-experience expansion before the autonomous backend path is real.
-
-## V2 Intelligence Runtime
-
-FastAPI is now the authoritative runtime for autonomous research. The Node server remains v1 compatibility infrastructure during migration and does not share a writable intelligence database.
-
-The runtime uses Temporal for durable task graphs, PostgreSQL with `pgvector` for state and memory, MinIO-compatible immutable artifact storage, configured Red Hat MaaS reasoning, Tavily direct API discovery and extraction, Tavily MCP discovery and extraction, Brave Web and News discovery, and application-controlled HTML, PDF, and browser retrieval.
-
-Provider results preserve query provenance, ranking position, timestamps, raw provider artifacts, provider path, operation name, and provider metadata. They remain discovery or acquisition inputs until the system normalizes, cites, resolves, and verifies the source. The architecture remains open to additional approved discovery providers through capability-specific discovery connectors.
-
-See [INTELLIGENCE_RUNTIME.md](INTELLIGENCE_RUNTIME.md) for startup, persistence, learning, and validation details.
-
-## Next Session Starting Point
-
-Read this file first, then [MAAS_MODELS.md](MAAS_MODELS.md).
-
-Run:
-
-```bash
-npm run check
+```text
+React and TypeScript seller workspace :8787
+        |
+        v
+FastAPI intelligence API :8000
+        |
+        +--> Temporal and intelligence worker
+        +--> PostgreSQL and pgvector
+        +--> MinIO-compatible artifact storage
+        +--> Red Hat MaaS reasoning
+        +--> Tavily direct API, Tavily MCP, Brave discovery
+        +--> controlled HTML, PDF, and browser acquisition
 ```
 
-Rerun the MaaS or retrieval probes only when provider configuration, model integration, or the relevant retrieval and reasoning code changes.
+The Node server and SQLite persistence remain V1 compatibility infrastructure. V2 uses an independent FastAPI and PostgreSQL boundary while migration is in progress. The frontend talks to FastAPI APIs through the application client and does not access providers, Temporal, PostgreSQL, or artifacts directly.
 
-Then continue the backend-first, living-intelligence phase:
+## V1 compatibility runtime
 
-1. Reuse the existing MaaS and retrieval probes as the first provider implementations.
-2. Start the account-agnostic autonomous runtime behind backend APIs first, with FastAPI as the intended next runtime direction rather than a permanent architectural limit.
-3. Preserve the frontend freeze except for wiring real backend states and outputs.
-4. Treat live public-web search with citations as a required capability for full autonomy and pursue it in parallel rather than using it as a reason to postpone backend intelligence work.
+Connected Monitor v1 provides:
 
-## Preferred implementation posture
-Foundation v0 is a single-user local web application. Preferred stack: TypeScript, React, Vite, a lightweight router, schema validation, unit tests, and one browser-flow test. Codex may choose an alternative only when it materially improves simplicity or testability; record the reason in `docs/decisions/`.
+- local Node HTTP serving;
+- runtime account and source registration;
+- SQLite persistence;
+- bounded RSS/Atom retrieval;
+- public-source safety checks;
+- optional evaluator configuration;
+- account detail and monitor history views.
 
-## Future integration contract
-Each external capability is added as an adapter that implements an existing provider interface. Adding RAG, MCP, APIs, Salesforce, a model provider, or notifications must not require changes to core entities or portfolio/account application-service contracts.
+Manual source registration is a bootstrap and compatibility path. RSS/Atom is not the universal retrieval architecture.
+
+## V2 intelligence runtime
+
+The current V2 path is:
+
+```text
+account context
+  -> persisted research run
+  -> plan and query strategy through MaaS
+  -> policy-selected discovery
+  -> raw discovery result retention
+  -> controlled acquisition and rendering
+  -> normalized evidence and citation
+  -> entity and claim decisions
+  -> verification and decision trace
+  -> ranking and keep/watch/reject/abstain disposition
+  -> bounded relevance hypothesis and validation question
+  -> Account Signal Brief and complete ledger
+  -> versioned account-team feedback
+```
+
+Discovery results and provider snippets are leads only. They cannot become evidence or seller-visible signals until source content is acquired, normalized, cited, and validated.
+
+## Capability boundaries
+
+| Capability | Current implementation | Boundary |
+|---|---|---|
+| Reasoning | Red Hat MaaS through an OpenAI-compatible endpoint | Prompts, schemas, model calls, latency, usage, and validation are instrumented. |
+| Discovery | Tavily direct API, Tavily MCP, Brave Web and News | Each path has independent readiness, operation names, raw results, provenance, and yield metrics. |
+| Acquisition | Application-controlled HTML, PDF, and browser paths | Discovery snippets never become evidence. Private and unsafe targets are rejected. |
+| Persistence | PostgreSQL for V2, SQLite for V1 | V1 and V2 do not share a writable intelligence database. |
+| Orchestration | Temporal and a dedicated intelligence worker | Stage state, retries, artifacts, and failures are persisted. |
+| Seller delivery | React/TypeScript research workspace | Brief, ledger, evidence audit, uncertainty, and feedback are exposed progressively. |
+
+## Evidence and decision boundaries
+
+- External fact, source evidence, entity match, verification, Red Hat relevance hypothesis, validation action, uncertainty, and disposition remain separate records.
+- Provider metadata preserves query, rank, timestamp, provider path, operation, and raw artifact references.
+- Unsupported customer intent, demand, fit, opportunity, renewal, deployment, ownership, or complete coverage claims are prohibited.
+- Rejected and abstained candidates remain available for audit and evaluation but are not promoted as top signals.
+- Feedback revisions are append-only. Feedback is collected for evaluation and does not automatically retrain or alter the runtime.
+
+## Current limitations
+
+- Provider readiness depends on local configuration. The current local capability report has MaaS and Tavily available, Brave unavailable, and HTML/PDF/browser acquisition available.
+- The runtime is local and single-user, not a deployed enterprise service.
+- Advanced learning and policy promotion records exist, but automatic retraining is not enabled.
+- V1 and V2 coexist during migration. The long-term direction is one coherent intelligence product, not two permanent overlapping backends.
+- Salesforce, Slack, email, scheduling, portfolio prioritization, and complete external-world coverage are not implemented.
+
+## Contributor entry points
+
+| Need | Start here |
+|---|---|
+| V1 server and ingestion | `server/` |
+| V2 API and orchestration | `intelligence/src/connected_monitor_intelligence/` |
+| V2 runtime setup | `docs/INTELLIGENCE_RUNTIME.md` |
+| Seller research workspace | `src/ui/AutonomousResearchPage.tsx` |
+| API contracts | `src/services/intelligenceApi.ts` and `docs/DATA_CONTRACTS.md` |
+| Provider boundaries | `docs/SOURCE_BOUNDARIES.md` and the intelligence provider modules |
